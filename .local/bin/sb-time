@@ -1,0 +1,4 @@
+#!/usr/bin/zsh
+
+time=$(date +'%I:%M %p')
+echo "^c#8fbcbb^ $time^c#FFFFFF^"

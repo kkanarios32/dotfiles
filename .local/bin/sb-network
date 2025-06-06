@@ -1,0 +1,26 @@
+#!/bin/zsh
+
+case "$BUTTON" in
+    1) click-network ;;
+esac
+
+# Get the signal strength from 'station <device> show'
+RSSI=$(iwctl station wlan0 show | grep 'AverageRSSI' | sed -E 's/.* (-[0-9]+) dBm/\1/')
+
+RSSI_NUM=$(echo "$RSSI" | sed 's/[^0-9\-]//g')
+
+COLOR="#a3be8c"
+# Classify signal strength
+if [ "$RSSI_NUM" -ge -50 ]; then
+    QUALITY="󰤨"
+elif [ "$RSSI_NUM" -ge -60 ]; then
+    QUALITY="󰤥"
+elif [ "$RSSI_NUM" -ge -70 ]; then
+    QUALITY="󰤢"
+    COLOR="#ebcb8b"
+else
+    QUALITY="󰤟"
+    COLOR="#bf616a"
+fi
+
+echo "^c$COLOR^${QUALITY}^c#FFFFFF^"

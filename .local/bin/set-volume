@@ -1,0 +1,30 @@
+#!/usr/bin/zsh
+
+# Get list of connected sinks with "bluez" in the name
+BT_SINK=$(pactl list short sinks | grep bluez | awk '{print $2}')
+IS_BT_CONNECTED=$(bluetoothctl info | grep -i "Connected: yes")
+
+# Use Bluetooth sink if connected and found
+if [[ -n "$BT_SINK" && -n "$IS_BT_CONNECTED" ]]; then
+    SINK="$BT_SINK"
+else
+    # Fallback to first non-Bluetooth sink
+    SINK=$(pactl list short sinks | grep -v bluez | head -n1 | awk '{print $2}')
+fi
+
+# Volume control
+case "$1" in
+  up)
+    pactl set-sink-volume "$SINK" +5%
+    ;;
+  down)
+    pactl set-sink-volume "$SINK" -5%
+    ;;
+  mute)
+    pactl set-sink-mute "$SINK" toggle
+    ;;
+  *)
+    echo "Usage: $0 [up|down|mute]"
+    exit 1
+    ;;
+esac

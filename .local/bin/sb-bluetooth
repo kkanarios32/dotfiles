@@ -1,0 +1,19 @@
+#!/usr/bin/zsh
+
+case "$BUTTON" in
+	1) click-bluetooth -l 15 -h 25;;
+esac
+
+connected=$(bluetoothctl devices | awk '{print $2}' | while read -r mac; do
+    if bluetoothctl info "$mac" | grep -q "Connected: yes"; then
+        echo "$mac"
+    fi
+done)
+
+if [ -n "$connected" ]; then
+	symbol=""
+else
+	symbol=""
+fi
+
+echo "^c#88C0D0^ $symbol^c#FFFFFF^"
