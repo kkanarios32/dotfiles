@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Get the directory containing the file
+DIR="$HOME/.local/opt/texify"
+
+# Check for virtual environment
+if [ -x "$DIR/.venv/bin/python" ]; then
+    PYTHON="$DIR/.venv/bin/python"
+else
+    dunstify "No venv found in $DIR" && exit 1
+fi
+
+"$PYTHON" "$DIR/ocr_image.py"

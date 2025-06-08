@@ -7,3 +7,6 @@
 [submodule ".local/opt/ImageGoNord-pip"]
 	path = .local/opt/ImageGoNord-pip
 	url = git@github.com:kkanarios32/ImageGoNord-pip.git
+[submodule ".local/opt/texify"]
+	path = .local/opt/texify
+	url = git@github.com:kkanarios32/texify.git
