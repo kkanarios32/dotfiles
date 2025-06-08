@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+function dmenuopt () { echo "-i -c -h 25"
+}	#Dmenu options, so as not to clutter the rest of the script. These are the options that I use, change them if you'd like
+
+# Get list of projects as "ID #Name"
+project_lines=$(todoist projects)
+
+# Extract display names and build a lookup table
+menu_entries=$(echo "$project_lines" | sed -E 's/^[0-9]+ #[ ]?//')
+
+menu_entries="None (no parent project)
+$menu_entries"
+project_ids=$(echo "$project_lines" | awk '{print $1}')
+
+# Prompt user to select project from names
+selected_name=$(echo "$menu_entries" | dmenu $(dmenuopt) -l 10 -p "Select parent project:")
+
+# Exit if nothing selected
+[ -z "$selected_name" ] && exit 1
+
+item_name=$(dmenu -i -c -p "New project name:" <&-)
+
+# Exit if nothing entered
+[ -z "$item_name" ] && exit 1
+
+# Find the ID corresponding to the selected name
+if [[ "$selected_name" == "None (no parent project)" ]]; then
+    todoist ap "$item_name"
+else
+    # Lookup ID for selected name
+    selected_id=$(echo "$project_lines" | grep "#$selected_name" | awk '{print $1}')
+    [ -z "$selected_id" ] && echo "Parent project ID not found" && exit 1
+
+    todoist ap -I "$selected_id" "$item_name"
+fi

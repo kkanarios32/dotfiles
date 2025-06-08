@@ -17,5 +17,5 @@ export PATH
 
 dwmblocks &
 dunst &
-feh --bg-scale $HOME/Pictures/car-nord.png &
+feh --bg-scale $HOME/Pictures/nord-obito.jpg &
 exec dwm

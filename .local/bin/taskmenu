@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+function dmenuopt () { echo "-i -c -h 25"
+}	#Dmenu options, so as not to clutter the rest of the script. These are the options that I use, change them if you'd like
+
+kind=$(printf "Subtask\nTask" | dmenu $(dmenuopt) -l 2 -p "What do you want to add?")
+
+
+item_name=$(dmenu -i -c -p "New task content:" <&-)
+
+# Exit if nothing entered
+[ -z "$item_name" ] && exit 1
+
+# Find the ID corresponding to the selected name
+if [[ "$kind" = "Subtask" ]]; then 
+    # Get full task lines (ID, metadata, content)
+    tasks=$(todoist list)  # Or your custom task-generating command
+    # Use newline splitting only
+    IFS=$'\n' read -d '' -r -a lines <<< "$tasks"
+
+    # Build parallel arrays: task_names and full_lines
+    task_names=()
+    for line in "${lines[@]}"; do
+        # Task name: remove everything up to and including the last tag/marker
+        # We'll conservatively strip everything before the last occurrence of '@' or '#' or priority
+        name=$(echo "$line" | sed -E 's/^.*([@#][^[:space:]]+[[:space:]]+)+//')
+        task_names+=("$name")
+    done
+
+    # Show just the task names in dmenu
+    selected_name=$(printf "%s\n" "${task_names[@]}" | dmenu $(dmenuopt) -l 10 -p "Select a task:")
+
+    # Exit if cancelled
+    [ -z "$selected_name" ] && exit 1
+
+    # Find the corresponding full line
+    selected_line=""
+    for i in "${!task_names[@]}"; do
+        if [[ "${task_names[$i]}" == "$selected_name" ]]; then
+            selected_line="${lines[$i]}"
+            break
+        fi
+    done
+
+    # Extract the task ID (first field)
+    task_id=$(echo "$selected_line" | awk '{print $1}')
+
+    todoist a -I "$task_id" "$item_name"
+else
+    # Get list of projects as "ID #Name"
+    project_lines=$(todoist projects)
+
+    # Extract display names and build a lookup table
+    menu_entries=$(echo "$project_lines" | sed -E 's/^[0-9]+ #[ ]?//')
+
+    menu_entries="None (no parent project)
+    $menu_entries"
+    project_ids=$(echo "$project_lines" | awk '{print $1}')
+
+    # Prompt user to select project from names
+    selected_name=$(echo "$menu_entries" | dmenu $(dmenuopt) -l 10 -p "Select parent project:")
+
+    # Exit if nothing selected
+    [ -z "$selected_name" ] && exit 1
+    if [[ "$selected_name" == "None (no parent project)" ]]; then
+        if [ "$kind" = "Task" ]; then
+            todoist q "$item_name"
+        else 
+            todoist ap -I "$selected_name"  "$item_name"
+        fi
+    fi
+fi
