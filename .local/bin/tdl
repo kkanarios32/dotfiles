@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+alacritty -e zsh -c 'todoist --color list | less -R'

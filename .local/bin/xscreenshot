@@ -49,8 +49,6 @@ print_usage() {
 	echo
 	echo "Helper script for scrot."
 	echo
-	echo "  -c scrot|maim (optional) Use scrot or main for screenshots."
-	echo "                Default: scrot"
 	echo "  -m <mode>     (optional) What kind of screenshot to take."
 	echo "                  -m window     Screenshot of active window"
 	echo "                  -m selection  Screenshot of selected area"
@@ -79,7 +77,8 @@ print_version() {
 
 TARGET_PATH="${DEFAULT_TARGET_PATH}"
 COMMAND="maim"
-MODE=""
+SAVE=true
+CLIP=false
 
 while [ $# -gt 0 ]; do
 	case "${1}" in
@@ -90,6 +89,12 @@ while [ $# -gt 0 ]; do
 				exit 1
 			fi
 			MODE="${1}"
+			;;
+		-s)
+			SAVE=false
+			;;
+		-c)
+			CLIP=true
 			;;
 		-p)
 			shift
@@ -134,12 +139,36 @@ if [ "${COMMAND}" = "maim" ]; then
 	fi
 fi
 
+SAVE_PATH=""
+ARG=""
 if [ "${MODE}" = "window" ]; then
-	maim --windowid="$(xdotool getactivewindow)" "${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [window].png"
+	ARG='--windowid="$(xdotool getactivewindow)"'
+	SAVE_PATH="${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [window].png"
 elif [ "${MODE}" = "selection" ]; then
-	maim --select "${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [selection].png"
+	ARG="-s"
+	SAVE_PATH="${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [selection].png"
 elif [ "${MODE}" = "multi" ]; then
-	maim "${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [all].png"
+	SAVE_PATH="${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ) [all].png"
 else
-	maim "${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ).png"
+	SAVE_PATH="${TARGET_PATH}/Screenshot $( date '+%Y-%m-%d %H-%M-%S' ).png"
 fi
+# Create a temporary file
+TMPFILE=$(mktemp --suffix=.png)
+
+# Take the screenshot to temp
+maim $ARG > "$TMPFILE"
+
+# Save to file if requested
+if [ "$SAVE" = true ]; then
+    cp "$TMPFILE" "$SAVE_PATH"
+    dunstify "Saved to $SAVE_PATH"
+fi
+
+# Copy to clipboard if requested
+if [ "$CLIP" = true ]; then
+    cat "$TMPFILE" | xclip -selection clipboard -t image/png
+    dunstify "Copied to clipboard"
+fi
+
+# Cleanup
+rm "$TMPFILE"
