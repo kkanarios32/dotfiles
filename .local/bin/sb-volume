@@ -26,7 +26,7 @@ if [ "$mute" != "yes" ]; then
     else
         icon=""
     fi
-    echo "^c#D8DEE9^$icon$volume%^c#FFFFFF^"
+    echo "^c#D08770^$icon$volume%^c#FFFFFF^"
 else
-   echo "^c#D8DEE9^󰸈^c#FFFFFF^"
+   echo "^c#D08770^󰸈^c#FFFFFF^"
 fi

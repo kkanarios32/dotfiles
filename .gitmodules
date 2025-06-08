@@ -1,3 +1,9 @@
 [submodule ".config/nvim"]
 	path = .config/nvim
 	url = git@github.com:kkanarios32/nvim.git
+[submodule ".local/opt/todoist-cli"]
+	path = .local/opt/todoist-cli
+	url = git@github.com:kkanarios32/todoist-cli.git
+[submodule ".local/opt/ImageGoNord-pip"]
+	path = .local/opt/ImageGoNord-pip
+	url = git@github.com:kkanarios32/ImageGoNord-pip.git

@@ -13,9 +13,10 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const int user_bh             = 8;        
 static const char *fonts[] = {
-    "CaskaydiaCove Nerd Font Propo:size=15",
+    // "CaskaydiaCove Nerd Font Propo:size=15",
     // "UbuntuMono Nerd Font Propo:size=15",
     // "Monofur Nerd Font Propo:size=16",
+    "Agave Nerd Font Propo:size=15",
     "Material Design Icons Desktop:size=15",
 };
 static const char dmenufont[]       = "Iosevka Medium:size=14";

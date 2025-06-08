@@ -17,5 +17,5 @@ export PATH
 
 dwmblocks &
 dunst &
-feh --bg-scale $HOME/Pictures/nord-obito.jpg &
+feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &
 exec dwm

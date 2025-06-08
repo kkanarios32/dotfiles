@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 
-function dmenuopt () { echo "-i -c -h 25"
-}	#Dmenu options, so as not to clutter the rest of the script. These are the options that I use, change them if you'd like
+function dmenuopt () { echo "-i -c -h 25" 
+}
+
+function labels () {
+    # Get list of projects as "ID #Name"
+    labels=$(todoist labels)
+    labels=$(echo "$labels" | sed -E 's/.*@//')
+    selected_labels=$(echo "$labels" | dmenu $(dmenuopt) -l 10 -p "Select labels:")
+    [ -z "$selected_labels" ] && exit 1
+
+    labels=$(echo $selected_labels | sed -E 's/ /\,/g')
+    echo "$labels"
+}
 
 kind=$(printf "Subtask\nTask" | dmenu $(dmenuopt) -l 2 -p "What do you want to add?")
 
+[ -z "$kind" ] && exit 1
 
 item_name=$(dmenu -i -c -p "New task content:" <&-)
 
@@ -45,7 +57,7 @@ if [[ "$kind" = "Subtask" ]]; then
     # Extract the task ID (first field)
     task_id=$(echo "$selected_line" | awk '{print $1}')
 
-    todoist a -I "$task_id" "$item_name"
+    todoist a -I "$task_id" -L "$(labels)" "$item_name"
 else
     # Get list of projects as "ID #Name"
     project_lines=$(todoist projects)
@@ -53,20 +65,10 @@ else
     # Extract display names and build a lookup table
     menu_entries=$(echo "$project_lines" | sed -E 's/^[0-9]+ #[ ]?//')
 
-    menu_entries="None (no parent project)
-    $menu_entries"
-    project_ids=$(echo "$project_lines" | awk '{print $1}')
-
     # Prompt user to select project from names
     selected_name=$(echo "$menu_entries" | dmenu $(dmenuopt) -l 10 -p "Select parent project:")
 
     # Exit if nothing selected
     [ -z "$selected_name" ] && exit 1
-    if [[ "$selected_name" == "None (no parent project)" ]]; then
-        if [ "$kind" = "Task" ]; then
-            todoist q "$item_name"
-        else 
-            todoist ap -I "$selected_name"  "$item_name"
-        fi
-    fi
+    todoist a -N "$selected_name" -L "$(labels)" "$item_name" 
 fi
