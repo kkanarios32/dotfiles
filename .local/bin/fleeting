@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+alacritty -e zsh -l -c  'cd /home/kellen/Projects/forest && eval $(opam env --switch=forest-5.0) && nvim /home/kellen/Projects/forest/trees/007R.tree'

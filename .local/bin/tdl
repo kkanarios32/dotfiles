@@ -1,3 +1,13 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-alacritty -e zsh -c 'todoist --color list | less -R'
+function dmenuopt () {
+    echo "-i -c -h 25" 
+}
+
+filter=$(echo "" | dmenu $(dmenuopt) -p "Enter filter:")
+
+[[ -z $filter ]] && exit 1
+
+cmd="todoist --color list -f ${filter} | less -R"
+
+alacritty --class Show -e zsh -c "$cmd"

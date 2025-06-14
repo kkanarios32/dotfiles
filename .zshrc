@@ -1,6 +1,7 @@
 alias vpnc="/opt/cisco/secureclient/bin/vpn connect umvpn.umnet.umich.edu/umvpn-all-traffic-alt connect"
 alias vpnd="/opt/cisco/secureclient/bin/vpn disconnect"
 alias sshpc="sudo tailscale ssh kellen@kellen-pc"
+alias ta="tmux attach"
 
 export CARGO_HOME=/opt/cargo
 
@@ -94,9 +95,11 @@ export FZF_DEFAULT_OPTS='
     --height 40%
     --layout=reverse
     --border
-    --color fg:#D8DEE9,bg:#2E3440,hl:#A3BE8C,fg+:#D8DEE9,bg+:#434C5E,hl+:#A3BE8C
-    --color pointer:#BF616A,info:#4C566A,spinner:#4C566A,header:#4C566A,prompt:#81A1C1,marker:#EBCB8B
-'
+    --color=fg:#e5e9f0,bg:#3b4252,hl:#81a1c1
+    --color=fg+:#e5e9f0,bg+:#3b4252,hl+:#81a1c1
+    --color=info:#eacb8a,prompt:#bf6069,pointer:#b48dac
+    --color=marker:#a3be8b,spinner:#b48dac,header:#a3be8b'
+
 export FZF_DEFAULT_COMMAND="fdfind --type f --follow --hidden --no-ignore-vcs"
 
 # CTRL-R
@@ -126,3 +129,5 @@ zle -N fzf-vim
 bindkey '^F' fzf-vim
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export PATH=$PATH:/home/kellen/.spicetify

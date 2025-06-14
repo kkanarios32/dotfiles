@@ -10,3 +10,6 @@
 [submodule ".local/opt/texify"]
 	path = .local/opt/texify
 	url = git@github.com:kkanarios32/texify.git
+[submodule ".local/opt/ulogme"]
+	path = .local/opt/ulogme
+	url = git@github.com:kkanarios32/ulogme.git
