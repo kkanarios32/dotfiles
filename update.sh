@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-git pull origin main --rebase
+git pull origin master --rebase
 git submodule update --remote --merge 
 git add . 
 git commit -am "update"
-git push origin main
+git push origin master
