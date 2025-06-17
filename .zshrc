@@ -4,6 +4,7 @@ alias sshpc="sudo tailscale ssh kellen@kellen-pc"
 alias ta="tmux attach"
 
 export CARGO_HOME=/opt/cargo
+export QUTE_CONFIG_DIR=/home/kellen/.config/qutebrowser/
 
 gpgconf --launch gpg-agent
 export GPG_TTY=$(tty)
