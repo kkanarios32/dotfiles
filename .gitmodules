@@ -13,3 +13,6 @@
 [submodule ".local/opt/ulogme"]
 	path = .local/opt/ulogme
 	url = git@github.com:kkanarios32/ulogme.git
+[submodule ".config/qutebrowser/dawn-startpage"]
+	path = .config/qutebrowser/dawn-startpage
+	url = git@github.com:kkanarios32/dawn-startpage.git

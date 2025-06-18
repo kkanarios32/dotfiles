@@ -1,3 +1,6 @@
+c.url.start_pages = ["https://kellenkanarios.com/startpage"]
+c.url.default_page = "https://kellenkanarios.com/startpage"
+
 c.url.searchengines = {
     "DEFAULT": "https://google.com/search?hl=en&q={}",
     "!gpt": "https://chat.openai.com/?model=gpt-4o&prompt={}",
@@ -354,3 +357,4 @@ c.colors.tabs.selected.odd.fg = nord["nord5"]
 ## color)
 ## Type: QtColor
 # c.colors.webpage.bg = 'white'
+config.load_autoconfig()
