@@ -82,7 +82,7 @@ _have "nvim" && set-editor nvim
 #----------------------- functions -----------------------------------
 _have() { type "$1" &>/dev/null; }
 
-pdots() {
+ghu() {
   cd $DOTFILES
   git pull origin master --rebase
   git submodule update --remote --merge 

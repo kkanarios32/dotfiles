@@ -10,7 +10,7 @@ alias ??='sr google -browser=w3m'
 alias glakes="ssh kellenkk@greatlakes.arc-ts.umich.edu"
 alias gitl="git log -n 5 --graph --decorate --oneline"
 
-alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="exclude/*|.venv/*" --adopt'
+alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="\.env|\.venv/*" --adopt'
 alias dot='cd $DOTFILES'
 alias scripts='cd $DOTFILES/.local/bin'
 

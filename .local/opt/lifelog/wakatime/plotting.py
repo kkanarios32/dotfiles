@@ -12,6 +12,9 @@ import argparse
 
 import requests
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- CONFIG ---
 API_KEY = os.getenv("WAKA_API")
