@@ -1,0 +1,27 @@
+#!/usr/bin/bash
+
+# Path to Zotero storage directory
+ZOTERO_STORAGE="$HOME/Downloads/pdfs/storage"
+
+# Build a map: short name -> full path
+declare -A pdf_map
+
+# Find PDFs and build choices
+choices=""
+while IFS= read -r filepath; do
+    # Extract base filename
+    filename=$(basename "$filepath")
+    # Optionally: strip extension
+    # filename="${filename%.pdf}"
+
+    # Add to menu choices
+    choices+="$filename"$'\n'
+    # Map filename to full path
+    pdf_map["$filename"]="$filepath"
+done < <(find "$ZOTERO_STORAGE" -type f -iname '*.pdf')
+
+# Prompt user to choose
+chosen=$(echo "$choices" | dmenu -i -l 20 -p "Open Zotero PDF:")
+
+# Open the associated file
+[ -n "$chosen" ] && xdg-open "${pdf_map["$chosen"]}"

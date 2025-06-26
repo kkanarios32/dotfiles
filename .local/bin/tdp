@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 function dmenuopt () { echo "-i -c -h 25"
 }	#Dmenu options, so as not to clutter the rest of the script. These are the options that I use, change them if you'd like

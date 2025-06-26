@@ -1,5 +1,14 @@
+c.fonts.default_size = "12pt"
+c.fonts.web.size.default = 25
+c.fonts.web.size.default_fixed = 10
+
 c.url.start_pages = ["https://kellenkanarios.com/startpage"]
 c.url.default_page = "https://kellenkanarios.com/startpage"
+c.window.title_format = "{perc}{current_title}{title_sep}{host}"
+
+c.qt.environ = {
+    "NODE_PATH": "/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
+}
 
 c.url.searchengines = {
     "DEFAULT": "https://google.com/search?hl=en&q={}",
@@ -19,7 +28,13 @@ c.aliases = {
     "o": "open",
     "h": "help",
     "zotero": "spawn --userscript zotero",
+    "Zotero": "hint links userscript zotero",
+    "readability": "spawn --userscript readability-js",
+    "news": "spawn --userscript newsboat {url}",
 }
+
+config.bind("zz", "zotero")
+config.bind("Zz", "Zotero")
 
 nord = {
     # Polar Night

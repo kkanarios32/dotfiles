@@ -1,0 +1,41 @@
+#!/usr/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $(basename "$0") APP_NAME"
+    exit 1
+fi
+
+export DISPLAY=:0
+
+app_name="$1"
+
+# Blocked usage time window (24-hour format)
+START_TIME="09:00"
+END_TIME="13:00"
+
+# Convert to seconds since midnight
+start_seconds=$((10#${START_TIME%%:*} * 3600 + 10#${START_TIME##*:} * 60))
+end_seconds=$((10#${END_TIME%%:*} * 3600 + 10#${END_TIME##*:} * 60))
+echo $start_seconds
+echo $end_seconds
+
+# Get current time in seconds since midnight
+get_current_seconds() {
+    now=$(date +%H:%M)
+    echo $((10#${now%%:*} * 3600 + 10#${now##*:} * 60))
+}
+
+while : ; do
+    pid=$(pgrep -x "$app_name")
+    sleep 1
+    if [ "$pid" != "" ]; then
+        now_seconds=$(get_current_seconds)
+        echo $now_seconds
+        if (( now_seconds >= start_seconds && now_seconds < end_seconds )); then
+            dunstify  "error" "Your time to use $app_name is outside allowed hours!"
+            kill "$pid"
+        else
+            sleep 60  # Allow it for a minute before checking again
+        fi
+    fi
+done

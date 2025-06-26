@@ -1,4 +1,6 @@
+source $HOME/.profile
 export GOPATH=$HOME/.go
+export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 
 for dir in /opt/**/bin; do
   [ -d "$dir" ] && PATH="$dir:$PATH"
@@ -17,5 +19,13 @@ export PATH
 
 dwmblocks &
 dunst &
-feh --bg-fill $HOME/Pictures/nord-obito.jpg
+arbtt-capture &
+appschedule qutebrowser &
+
+if [[ "$COMPUTER" == "laptop" ]]; then
+  feh --bg-fill $HOME/Pictures/nord-obito.jpg
+else 
+  feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &
+fi
+
 exec dwm

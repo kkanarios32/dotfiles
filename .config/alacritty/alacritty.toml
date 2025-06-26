@@ -1,5 +1,6 @@
 [font]
 normal = { family = "Iosevka Term", style = "Medium" }
+size = 22.0
 [colors.bright]
 black = "#4c566a"
 blue = "#81a1c1"
@@ -50,3 +51,6 @@ text = "CellForeground"
 [colors.vi_mode_cursor]
 cursor = "#d8dee9"
 text = "#2e3440"
+
+[window]
+dynamic_title = true

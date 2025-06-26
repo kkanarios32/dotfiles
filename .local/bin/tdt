@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 function dmenuopt () { echo "-i -c -h 25" 
 }

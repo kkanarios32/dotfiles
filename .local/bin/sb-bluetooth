@@ -1,4 +1,4 @@
-#!/usr/bin/zsh
+#!/usr/bin/bash
 
 case "$BUTTON" in
 	1) click-bluetooth -l 15 -h 25;;

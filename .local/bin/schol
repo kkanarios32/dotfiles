@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+# Prompt for input using dmenu
+query=$(dmenu -p "schol:" <&-)
+
+# Exit if input is empty or cancelled
+[ -z "$query" ] && exit
+
+# Execute sr with the query
+sr scholar $query

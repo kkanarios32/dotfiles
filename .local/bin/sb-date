@@ -1,4 +1,4 @@
 #!/usr/bin/zsh
 
-date=$(date +'%m-%d-%Y')
+date=$(date +'%m-%d')
 echo "^c#B48EAD^ $date^c#FFFFFF^"

@@ -20,7 +20,8 @@
 #define BLOCKS(X)             \
     X("", "sb-bluetooth", 10, 2) \
     X("", "sb-network", 1, 1) \
-    X("", "sb-vpn", 10, 1) \
+    X("", "sb-vpn", 10, 7) \
+    X("", "pomo clock", 1, 8) \
     X("", "sb-time", 60, 6) \
     X("", "sb-date", 10000, 5) \
     X("", "sb-volume", 1, 4) \

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/bash
 iwddir="/var/lib/iwd"	
 station="wlan0"
 consym=" "

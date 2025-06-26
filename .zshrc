@@ -2,8 +2,13 @@ alias vpnc="/opt/cisco/secureclient/bin/vpn connect umvpn.umnet.umich.edu/umvpn-
 alias vpnd="/opt/cisco/secureclient/bin/vpn disconnect"
 alias sshpc="sudo tailscale ssh kellen@kellen-pc"
 alias ta="tmux attach"
-alias schol="sr scholar"
-alias sgh="sr github"
+alias as="arbtt-stats"
+alias ast="arbtt-stats  --filter='\$date>='`date +"%Y-%m-%d"`"
+alias g='sr google -browser=w3m'
+
+precmd() {
+  print -Pn "\e]0;Alacritty: %~\a"
+}
 
 export CARGO_HOME=/opt/cargo
 export QUTE_CONFIG_DIR=/home/kellen/.config/qutebrowser/

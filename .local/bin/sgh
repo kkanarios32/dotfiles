@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+# Prompt for input using dmenu
+query=$(dmenu -p "github:" <&-)
+
+# Exit if input is empty or cancelled
+[ -z "$query" ] && exit
+
+# Execute sr with the query
+sr github "$query"

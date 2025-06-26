@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# File where Newsboat expects feed URLs
+URL_FILE="${HOME}/.newsboat/urls"
+
+# Get current URL from qutebrowser
+URL="$1"
+
+# Check if it's already in the file
+if grep -Fxq "$URL" "$URL_FILE"; then
+    notify-send "Newsboat" "URL already in list: $URL"
+else
+    echo "$URL" >> "$URL_FILE"
+    notify-send "Newsboat" "Added to feeds: $URL"
+fi

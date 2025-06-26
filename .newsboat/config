@@ -1,0 +1,12 @@
+# Vim-style navigation
+bind-key j down
+bind-key k up
+bind-key h quit
+bind-key l open
+bind-key J next-feed
+bind-key K prev-feed
+bind-key gg home
+bind-key G end
+# bind-key dd delete
+bind-key o open-in-browser
+browser "qutebrowser"

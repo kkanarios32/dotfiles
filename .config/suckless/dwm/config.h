@@ -17,6 +17,7 @@ static const char *fonts[] = {
     // "UbuntuMono Nerd Font Propo:size=15",
     // "Monofur Nerd Font Propo:size=16",
     "Agave Nerd Font Propo:size=15",
+    // "Work Sans:size=15",
     "Material Design Icons Desktop:size=15",
 };
 static const char dmenufont[]       = "Iosevka Medium:size=14";
@@ -43,7 +44,7 @@ static const Rule rules[] = {
 	/* class      instance    title       tags mask     iscentered   isfloating   monitor */
 	{ "Show",     NULL,       NULL,       0,            1,           1,           -1 },
 	{ "Gimp",     NULL,       NULL,       0,            0,           1,           -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           -1 },
+	{ "Browser",  NULL,       NULL,       1 << 8,       0,           0,           -1 },
 };
 
 /* layout(s) */
@@ -75,7 +76,9 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-l", "5", "-h", "25", "-m", dmenumon, "-fn", dmenufont, NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
 static const char *passcmd[]  = { "passmenu", "-l", "5", "-h", "25", "-fn", dmenufont, NULL};
-static const char *screenshotcmd[]  = { "xscreenshot", "-m", "selection", NULL };
+static const char *screenshotcmd[]  = { "xscreenshot", "-m", "selection", "-s", "-c", NULL };
+static const char *browsercmd[]  = { "qutebrowser", NULL };
+static const char *pdfcmd[]  = { "opdf", NULL };
 
 static const char *mutecmd[] = { "set-volume", "mute", NULL };
 static const char *volupcmd[] = { "set-volume", "up", NULL };
@@ -102,6 +105,8 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_p,      spawn,          {.v = passcmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_s,      spawn,          {.v = screenshotcmd } },
+	{ MODKEY,                       XK_q,      spawn,          {.v = browsercmd } },
+	{ MODKEY,                       XK_z,      spawn,          {.v = pdfcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },

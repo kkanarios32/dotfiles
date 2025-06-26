@@ -1,13 +1,19 @@
-#!/bin/bash
+#!/usr/bin/bash
 
-# Get the directory containing the file
-DIR="$HOME/.local/opt/texify"
+# Create a temporary file
+APPDIR="$HOME/Projects/dotfiles/.local/opt/surya"
+TMPFILE=$(mktemp --suffix=.png)
 
-# Check for virtual environment
-if [ -x "$DIR/.venv/bin/python" ]; then
-    PYTHON="$DIR/.venv/bin/python"
+if [ -x "$APPDIR/.venv/bin/python3" ]; then
+    PYTHON="$APPDIR/.venv/bin/python3"
 else
-    dunstify "No venv found in $DIR" && exit 1
+    dunstify "No venv found in $APPDIR" && exit 1
 fi
 
-"$PYTHON" "$DIR/ocr_image.py"
+maim -s > "$TMPFILE"
+
+output=$($PYTHON $APPDIR/one_image.py $TMPFILE)
+echo $output | xclip -selection clipboard
+
+rm $TMPFILE
+dunstify "Tex in clipboard" && exit 1
