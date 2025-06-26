@@ -82,6 +82,15 @@ _have "nvim" && set-editor nvim
 #----------------------- functions -----------------------------------
 _have() { type "$1" &>/dev/null; }
 
+pdots() {
+  cd $DOTFILES
+  git pull origin master --rebase
+  git submodule update --remote --merge 
+  git add . 
+  git commit -am "update"
+  git push origin master
+}
+
 vf() {
   local file
   file=$(fzf) || return  # if no file selected, return
