@@ -12,7 +12,8 @@ fi
 
 maim -s > "$TMPFILE"
 
-output=$($PYTHON $APPDIR/one_image.py $TMPFILE)
+# output=$($PYTHON $APPDIR/one_image.py $TMPFILE)
+output=$(uv run $APPDIR/one_image.py $TMPFILE)
 echo $output | xclip -selection clipboard
 
 rm $TMPFILE

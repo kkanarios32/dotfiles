@@ -8,6 +8,21 @@ filter=$(echo "" | dmenu $(dmenuopt) -p "Enter filter:")
 
 [[ -z $filter ]] && exit 1
 
-cmd="todoist --color list -f ${filter} | less -R"
+case "$filter" in
+    np)
+        filter='@next & @project'
+    ;;
+    nt)
+        filter='@next & !@project'
+    ;;
+    sp) 
+        filter='@someday & @project'
+    ;;
+    st)
+        filter='@someday & !@project'
+    ;;
+esac
+
+cmd="todoist list -f '$filter' | tdlp | less -R"
 
 alacritty --class Show -e zsh -c "$cmd"

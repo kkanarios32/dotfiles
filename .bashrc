@@ -11,10 +11,10 @@ esac
 # Set window title to "user@host: current-directory"
 
 export CARGO_HOME=/opt/cargo
-export QUTE_CONFIG_DIR=/home/kellen/.config/qutebrowser/
+export QUTE_CONFIG_DIR=/home/kellen/.config/qutebrowser
 export PATH=$PATH:/home/kellen/.spicetify
-export DOTFILES=/home/kellen/Projects/dotfiles/
-
+export DOTFILES=/home/kellen/Projects/dotfiles
+export FORESTDIR=/home/kellen/Projects/forest
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
@@ -82,12 +82,22 @@ _have "nvim" && set-editor nvim
 #----------------------- functions -----------------------------------
 _have() { type "$1" &>/dev/null; }
 
-ghu() {
+fw() {
+cd $FORESTDIR
+tmux new-session -d -s forest -n server ./server.sh
+qutebrowser --target window http://localhost:1234/0001/index.xml &
+}
+
+_unode() {
   git pull origin master --rebase
   git submodule update --remote --merge 
   git add . 
   git commit -am "update"
-  git push origin master
+  git push origin main
+} && export _unode
+
+ghu() {
+  git submodule foreach --recursive $(_unode)
 }
 
 vf() {

@@ -14,7 +14,7 @@ import requests
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path="./key.env")
 
 # --- CONFIG ---
 API_KEY = os.getenv("WAKA_API")
@@ -24,7 +24,7 @@ def set_style():
     sns.set_context("paper", font_scale=1.5)
     rc = {
         "font.family": "sans-serif",
-        "font.sans-serif": "Work Sans",
+        "font.sans-serif": "Facebook Sans",
         # "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
         "axes.spines.top": False,
         "axes.spines.right": False,
@@ -130,7 +130,7 @@ def plot(data, save_dir):
     sns.barplot(x=day_labels, y=totals)
     plt.ylabel("Hours")
     plt.xlabel("Day of Week")
-    plt.title("Total Coding Time per Day", fontstyle="italic")
+    plt.title("Total Coding Time per Day")
     plt.tight_layout()
     plt.savefig(f"{save_dir}/total-per-day", dpi=300)
     plt.show()
@@ -146,7 +146,7 @@ def plot(data, save_dir):
         lang_pivot.plot(kind="bar", stacked=True, figsize=(8, 5))
         plt.ylabel("Hours")
         plt.xlabel("Day of Week")
-        plt.title("Coding Time by Language", fontstyle="italic")
+        plt.title("Coding Time by Language")
         plt.legend(title="Language", bbox_to_anchor=(1.05, 1), loc="upper left")
         plt.tight_layout()
         plt.savefig(f"{save_dir}/by-language", dpi=300)
@@ -163,7 +163,7 @@ def plot(data, save_dir):
         proj_pivot.plot(kind="bar", stacked=True, figsize=(8, 5))
         plt.ylabel("Hours")
         plt.xlabel("Day of Week")
-        plt.title("Coding Time by Project", fontstyle="italic")
+        plt.title("Coding Time by Project")
         plt.legend(title="Project", bbox_to_anchor=(1.05, 1), loc="upper left")
         plt.tight_layout()
         plt.savefig(f"{save_dir}/by-project", dpi=300)
