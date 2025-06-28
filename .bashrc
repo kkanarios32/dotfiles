@@ -97,7 +97,8 @@ _unode() {
 } && export _unode
 
 ghu() {
-  git submodule foreach --recursive $(_unode)
+  pullpush
+  git submodule foreach --recursive pullpush
 }
 
 vf() {
