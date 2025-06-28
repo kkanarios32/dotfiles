@@ -88,14 +88,6 @@ tmux new-session -d -s forest -n server ./server.sh
 qutebrowser --target window http://localhost:1234/0001/index.xml &
 }
 
-_unode() {
-  git pull origin master --rebase
-  git submodule update --remote --merge 
-  git add . 
-  git commit -am "update"
-  git push origin main
-} && export _unode
-
 ghu() {
   pullpush
   git submodule foreach --recursive pullpush
