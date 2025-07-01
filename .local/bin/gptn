@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+_have() { type "$1" &>/dev/null; }
+! _have mods && echo "requires charmbracelet/mods" && exit 1
+mods "$*"

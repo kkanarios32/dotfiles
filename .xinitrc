@@ -2,18 +2,12 @@ source $HOME/.profile
 export GOPATH=$HOME/.go
 export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 
-for dir in /opt/**/bin; do
-  [ -d "$dir" ] && PATH="$dir:$PATH"
-done
-
-for dir in /opt/*/; do
-  [ -d "$dir" ] && PATH="$dir:$PATH"
-done
+PATH="$(find -L /opt -type d -name bin 2>/dev/null | paste -sd: -):$PATH"
+PATH="$(find -L /opt -mindepth 1 -maxdepth 1 -type d | paste -sd: -):$PATH"
 
 PATH="$PATH:$GOPATH/bin"
-PATH="$PATH:/opt/bin"
 PATH="$PATH:/usr/local/texlive/2025/bin/x86_64-linux"
-PATH=$PATH:$HOME/.local/bin
+export PATH="$(find -L $HOME/.local/bin/ -type d -print | paste -sd: -):$PATH"
 
 export PATH
 

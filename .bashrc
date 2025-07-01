@@ -10,11 +10,13 @@ esac
 
 # Set window title to "user@host: current-directory"
 
+export OPENAI_API_KEY=$(cat $HOME/.keys/gpt)
 export CARGO_HOME=/opt/cargo
-export QUTE_CONFIG_DIR=/home/kellen/.config/qutebrowser
+export QUTE_CONFIG_DIR=$HOME/.config/qutebrowser
 export PATH=$PATH:/home/kellen/.spicetify
-export DOTFILES=/home/kellen/Projects/dotfiles
-export FORESTDIR=/home/kellen/Projects/forest
+export PROJECTDIR=$HOME/Projects
+export FORESTDIR=$PROJECTDIR/forest
+export DOTFILES=$PROJECTDIR/dotfiles
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
@@ -83,9 +85,13 @@ _have "nvim" && set-editor nvim
 _have() { type "$1" &>/dev/null; }
 
 fw() {
-cd $FORESTDIR
-tmux new-session -d -s forest -n server ./server.sh
-qutebrowser --target window http://localhost:1234/0001/index.xml &
+  tmux new-session -d -s forest -n server ./server.sh
+}
+
+frst() {
+  cd $FORESTDIR
+  fw
+  qutebrowser --target window http://localhost:1234/0001/index.xml &
 }
 
 ghu() {
@@ -93,15 +99,10 @@ ghu() {
   git submodule foreach --recursive pullpush
 }
 
-vf() {
-  local file
-  file=$(fzf) || return  # if no file selected, return
-  nvim "$file"
-}
-
 glup(){
   scp -r "$1" kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$2"
 }
+
 gldown(){
   scp -r kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$1" "$2"
 }
@@ -109,6 +110,7 @@ gldown(){
 pcup(){
   scp -r "$1" kellen@kellen-pc.tail82ceca.ts.net:"$2"
 }
+
 pcdown(){
   scp -r kellen@kellen-pc.tail82ceca.ts.net:"$1" "$2"
 }
@@ -179,7 +181,13 @@ if _have fzf; then
       --color=info:#eacb8a,prompt:#bf6069,pointer:#b48dac
       --color=marker:#a3be8b,spinner:#b48dac,header:#a3be8b'
 
-  export FZF_DEFAULT_COMMAND="fdfind --type f --follow --hidden --no-ignore-vcs"
+  export FZF_DEFAULT_COMMAND="fdfind --type f --follow --hidden"
+
+  vf() {
+    local file
+    file=$(fzf) || return  # if no file selected, return
+    nvim "$file"
+  }
 
   # Set up fzf key bindings and fuzzy completion
   eval "$(fzf --bash)"

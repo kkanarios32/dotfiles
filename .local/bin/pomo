@@ -305,8 +305,8 @@ done
 
 [[ -e ${config} ]] && source "${config}"
 POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
-WORK_TIME=${POMO_WORK_TIME:-25}
-BREAK_TIME=${POMO_BREAK_TIME:-5}
+WORK_TIME=${POMO_WORK_TIME:-50}
+BREAK_TIME=${POMO_BREAK_TIME:-10}
 MSG_CALLBACK=${POMO_MSG_CALLBACK:-pomo_msg_callback}
 
 #--- Run! ---

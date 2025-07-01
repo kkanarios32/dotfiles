@@ -1,0 +1,117 @@
+#!/usr/bin/python3
+
+import sys
+import re
+
+
+class Colors:
+    RESET = "\033[0m"
+    BRIGHT_BLUE = "\033[94m"
+    BRIGHT_GREEN = "\033[92m"
+    BRIGHT_CYAN = "\033[96m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_YELLOW = "\033[93m"
+    BRIGHT_RED = "\033[91m"
+    BRIGHT_WHITE = "\033[97m"
+    BRIGHT_BLACK = "\033[90m"
+
+
+ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+
+def strip_ansi(text):
+    return ansi_escape.sub("", text)
+
+
+def parse_lines(lines):
+    project_map = {}
+
+    for line in lines:
+        raw_line = line.rstrip("\n")
+        clean_line = strip_ansi(raw_line)
+
+        if not clean_line.strip():
+            continue
+
+        task_id_match = re.match(r"^(\d+)", clean_line)
+        if not task_id_match:
+            continue
+        task_id = task_id_match.group(1)
+
+        project_match = re.search(r"(#\S+)", clean_line)
+        clean_project = project_match.group(1) if project_match else "NoProject"
+
+        context_matches = list(re.finditer(r"@\S+", clean_line))
+        contexts = [m.group(0) for m in context_matches]
+
+        if context_matches:
+            last_ctx = context_matches[-1]
+            desc_start = last_ctx.end()
+        else:
+            desc_start = clean_line.find(task_id) + len(task_id)
+            desc_start = clean_line.find(" ", desc_start)
+            desc_start = clean_line.find(" ", desc_start + 1)
+
+        description = clean_line[desc_start:].rstrip()
+        leading_spaces = len(description) - len(description.lstrip(" "))
+
+        # Don't strip description yet – keep original indent
+        if clean_project not in project_map:
+            project_map[clean_project] = []
+
+        project_map[clean_project].append(
+            (task_id, contexts, description, leading_spaces)
+        )
+
+    return project_map
+
+
+def colorize(text, color_code):
+    return f"{color_code}{text}{Colors.RESET}"
+
+
+def display_tasks_colored(project_map):
+    project_colors = [
+        Colors.BRIGHT_BLUE,
+        Colors.BRIGHT_GREEN,
+        Colors.BRIGHT_CYAN,
+        Colors.BRIGHT_MAGENTA,
+        Colors.BRIGHT_YELLOW,
+        Colors.BRIGHT_RED,
+        Colors.BRIGHT_WHITE,
+        Colors.BRIGHT_BLACK,
+    ]
+
+    ctx_color = Colors.BRIGHT_CYAN
+    id_color = Colors.BRIGHT_BLACK
+
+    for idx, project in enumerate(sorted(project_map.keys())):
+        color = project_colors[idx % len(project_colors)]
+        print(colorize(project + ":", color))
+
+        tasks = project_map[project]
+        if not tasks:
+            continue
+
+        # Determine base indent to compare against
+        base_indent = min(indent for _, _, _, indent in tasks)
+
+        for task_id, contexts, description, leading_spaces in tasks:
+            is_subtask = leading_spaces > base_indent
+            ctx_str = ", ".join([colorize(ctx, ctx_color) for ctx in contexts])
+            prefix = "└─ " if is_subtask else ""
+            print(
+                f"  {prefix}{colorize(task_id, id_color)} ({ctx_str}) {description.lstrip()}"
+            )
+
+
+def main():
+    # raw_output = run_todoist_command()
+    # lines = raw_output.strip().split("\n")
+    lines = [line.rstrip("\n") for line in sys.stdin]
+    project_map = parse_lines(lines)
+    display_tasks_colored(project_map)
+
+
+if __name__ == "__main__":
+    main()

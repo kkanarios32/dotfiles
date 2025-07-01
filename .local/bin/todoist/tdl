@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+function dmenuopt () {
+    echo "-i -c -h 25" 
+}
+
+filter=$(echo "" | dmenu $(dmenuopt) -p "Enter filter:")
+
+[[ -z $filter ]] && exit 1
+
+case "$filter" in
+    rnc)
+        filter='##Research & @next & @coding'
+    ;;
+    pnc)
+        filter='##Personal & @next & @coding'
+    ;;
+    ssn)
+        filter='##Selfstudy & @next'
+    ;;
+    rwn) 
+        filter='##Readwrite & @next'
+    ;;
+    rs)
+        filter='##Research & @someday'
+    ;;
+    ps)
+        filter='##Personal & @someday'
+    ;;
+esac
+
+cmd="todoist --indent list -f '$filter' | tdlp | less -R"
+echo $cmd
+
+alacritty --class Show -e zsh -c "$cmd"

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+	out=$(date "+%A, %B %e, %Y, %l:%M:%S%p %Z")
+	echo "${out//  / }"
+else
+	out=$(date "+%A, %B %e, %Y, %l:%M:%S%p %Z" -d "$*")
+	echo "${out//  / }"
+fi

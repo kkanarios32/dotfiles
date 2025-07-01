@@ -1,3 +1,6 @@
 set editing-mode vi
+set enable-bracketed-paste on
+set bell-style none
+"\C-l": clear-screen
 "\C-p": history-search-backward
 "\C-n": history-search-forward
