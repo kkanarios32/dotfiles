@@ -12,8 +12,7 @@ alias ?="gpt"
 alias ??='sr google -browser=w3m'
 alias glakes="ssh kellenkk@greatlakes.arc-ts.umich.edu"
 alias gitl="git log -n 5 --graph --decorate --oneline"
-
-alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="\.env|\.venv/*" --adopt'
+alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="\.env|\.venv/*|\.local/opt/*|install/*" --adopt'
 alias dot='cd $DOTFILES'
 alias cdf='cd $FORESTDIR'
 alias scripts='cd $DOTFILES/.local/bin'

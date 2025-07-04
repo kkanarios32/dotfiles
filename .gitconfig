@@ -1,6 +1,3 @@
 [user]
-	name = Kellen Kanarios
 	email = kanarioskellen@gmail.com
-[alias]
-	push-all = "! find . -type d -depth -name .git -exec dirname {} \\; 2> /dev/null | sort -n -r | xargs -I{} bash -c \"cd {}; git status | grep ahead > /dev/null && { echo '* Pushing: {}'; git push; }\""
-
+	name = Kellen Kanarios

@@ -1,4 +1,3 @@
-source $HOME/.profile
 export GOPATH=$HOME/.go
 export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 
@@ -16,7 +15,7 @@ dunst &
 arbtt-capture &
 appschedule qutebrowser &
 
-if [[ "$COMPUTER" == "laptop" ]]; then
+if [[ "$(hostname)" == "kellen-laptop" ]]; then
   feh --bg-fill $HOME/Pictures/nord-obito.jpg
 else 
   feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &

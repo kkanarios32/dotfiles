@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+
+declare -A PATHS
+TITLES=()
+
+TMPFILE=$(mktemp)
+eval $(opam env --switch=forest)
+cd $FORESTDIR
+
+forester query all > $TMPFILE
+
+while IFS=$'\t' read -r title path; do
+  TITLES+=("$title")
+  PATHS["$title"]="$path"
+done < <(jq -r '.[] | "\(.title)\t\(.sourcePath)"' "$TMPFILE")
+rm $TMPFILE
+
+# Show only titles in dmenu
+SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Open Note:")
+
+[[ -z $SELECTED ]] && exit 1
+
+# Open the corresponding path
+SOURCEPATH="${PATHS[$SELECTED]}"
+
+nvim $SOURCEPATH
