@@ -84,16 +84,6 @@ _have "nvim" && set-editor nvim
 #----------------------- functions -----------------------------------
 _have() { type "$1" &>/dev/null; }
 
-fw() {
-  tmux new-session -d -s forest -n server ./server.sh
-}
-
-frst() {
-  cd $FORESTDIR
-  fw
-  qutebrowser --target window http://localhost:1234/0001/index.xml &
-}
-
 ghu() {
   pullpush
   git submodule foreach --recursive pullpush
