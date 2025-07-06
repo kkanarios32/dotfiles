@@ -22,5 +22,6 @@ SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Open Note:")
 
 # Open the corresponding path
 SOURCEPATH="${PATHS[$SELECTED]}"
+export SOURCEPATH
 
-nvim $SOURCEPATH
+alacritty -e bash -c "eval $(opam env --switch=forest) && nvim $SOURCEPATH"
