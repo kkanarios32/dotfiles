@@ -1,0 +1,38 @@
+#!/bin/bash
+
+_create() {
+  cd $FORESTDIR
+  eval $(opam env --switch=forest)
+  FILENAME=$(opam exec -- forester new --random --dest="$FORESTDIR/trees/todo")
+  TITLE="$*"
+
+  # if templates/$TREE_PREFIX.tree exists
+  echo "\\title{$TITLE}" >> $FILENAME
+  cat $FORESTDIR/templates/todo.tree >> $FILENAME
+  echo $FILENAME
+}
+
+_edit() {
+  cd $FORESTDIR
+  eval $(opam env --switch=forest)
+  FILENAME=$(_create "$@")
+  nvim $FILENAME
+}
+
+# Dispatch based on first argument
+CMD="$1"
+shift
+
+case "$CMD" in
+  add)
+    _create "$@"
+    ;;
+  edit)
+    edit_command="$(declare -f _create; declare -f _edit; echo "_edit \"$@\"")"
+    alacritty -e bash -c "$edit_command"
+    ;;
+  *)
+    echo "Usage: $0 {add|edit} [title words...]"
+    exit 1
+    ;;
+esac

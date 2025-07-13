@@ -4,24 +4,21 @@ declare -A PATHS
 TITLES=()
 
 TMPFILE=$(mktemp)
-eval $(opam env --switch=forest)
-cd $FORESTDIR
+eval "$(opam env --switch=forest)"
+cd "$FORESTDIR"
 
-forester query all > $TMPFILE
+forester query all > "$TMPFILE"
 
-while IFS=$'\t' read -r title path; do
+while IFS= read -r -d '' title && IFS= read -r -d '' path; do
   TITLES+=("$title")
   PATHS["$title"]="$path"
-done < <(jq -r '.[] | "\(.title)\t\(.sourcePath)"' "$TMPFILE")
-rm $TMPFILE
+done < <(jq -j '.[] | (.title + "\u0000" + .sourcePath + "\u0000")' "$TMPFILE")
+rm "$TMPFILE"
 
-# Show only titles in dmenu
 SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Open Note:")
-
 [[ -z $SELECTED ]] && exit 1
 
-# Open the corresponding path
 SOURCEPATH="${PATHS[$SELECTED]}"
-export SOURCEPATH
 
-alacritty -e bash -c "eval $(opam env --switch=forest) && nvim $SOURCEPATH"
+# Launch Alacritty with nvim on selected file
+alacritty -e bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""

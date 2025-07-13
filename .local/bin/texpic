@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+
+import os
+import tempfile
+import subprocess
+
+PATH = "/home/kellen/Downloads/test.png"
+TARGET = "image/png"
+
+
+def open_editor(filename):
+    subprocess.run(
+        [
+            "alacritty",
+            "--class",
+            "Show",
+            "-e",
+            "nvim",
+            "+2",
+            f"{filename}",
+        ]
+    )
+
+
+def latex_document(latex):
+    return (
+        r"""
+        \documentclass[12pt,border=12pt]{standalone}
+
+        \usepackage[utf8]{inputenc}
+        \usepackage[T1]{fontenc}
+        \usepackage{textcomp}
+        \usepackage{amsmath, amssymb}
+        \newcommand{\R}{\mathbb R}
+
+        \begin{document}
+    """
+        + latex
+        + r"\end{document}"
+    )
+
+
+def compile_latex_to_png(latex_file):
+    workdir = tempfile.gettempdir()
+
+    # Run pdflatex quietly
+    subprocess.run(
+        ["pdflatex", "-interaction=nonstopmode", latex_file],
+        cwd=workdir,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    # pdf_file = latex_file.replace(".tex", ".pdf")
+    # png_file = latex_file.replace(".tex", ".png")
+    pdf_file = os.path.join(
+        workdir, os.path.basename(latex_file.replace(".tex", ".pdf"))
+    )
+    png_file = os.path.join(
+        workdir, os.path.basename(latex_file.replace(".tex", ".png"))
+    )
+
+    # Convert pdf to svg
+    result = subprocess.run(
+        [
+            "convert",
+            "-density",
+            "600",
+            pdf_file,
+            "-transparent",
+            "white",
+            png_file,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 0:
+        print("Error:", result.stderr.decode())
+
+    return os.path.join(workdir, png_file)
+
+
+def copy_png_to_clipboard(png_path):
+    with open(png_path, "rb") as f:
+        result = subprocess.run(
+            ["xclip", "-selection", "clipboard", "-t", TARGET],
+            stdin=f,
+        )
+        if result.returncode != 0:
+            print("Error:", result.stderr.decode())
+
+
+def main():
+    # Create temp tex file with a minimal document
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".tex", delete=False) as tf:
+        tf.flush()
+        tex_path = tf.name
+
+        tf.write("$$\n\n$$")
+        tf.close()
+        # Open Vim to edit
+        open_editor(tex_path)
+        with open(tex_path, "r") as g:
+            latex = g.read().strip()
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".tex", delete=False) as tf:
+        tf.flush()
+        tf.write(latex_document(latex))
+        tex_path = tf.name
+
+    png_path = compile_latex_to_png(tex_path)
+    copy_png_to_clipboard(png_path)
+
+    print("PNG copied to clipboard! You can paste it into Google Slides now.")
+
+    # Cleanup temp files
+    for ext in [".aux", ".log", ".pdf", ".tex", ".png"]:
+        try:
+            os.remove(tex_path.replace(".tex", ext))
+        except FileNotFoundError:
+            pass
+
+
+if __name__ == "__main__":
+    main()

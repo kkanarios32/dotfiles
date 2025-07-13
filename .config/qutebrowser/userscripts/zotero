@@ -75,7 +75,7 @@ def bibimport(resource):
     # Only exists in zotero 5.0? In any case, not used in this version but might convert to a plugin when the infrastructure exists,
     # or bring back into this version when https://github.com/qutebrowser/qutebrowser/issues/2323 is fixed
     postExpectedOrFail(
-        "import", data=resource, headers={"Content-Type": "application/x-bibtex"}
+        "import", 201, data=resource, headers={"Content-Type": "application/x-bibtex"}
     )
 
 

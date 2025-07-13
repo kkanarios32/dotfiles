@@ -11,16 +11,13 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const int user_bh             = 8;        
+static const int user_bh             = 10;        
 static const char *fonts[] = {
-    // "CaskaydiaCove Nerd Font Propo:size=15",
-    // "UbuntuMono Nerd Font Propo:size=15",
-    // "Monofur Nerd Font Propo:size=16",
-    "Agave Nerd Font Propo:size=15",
-    // "Work Sans:size=15",
-    "Material Design Icons Desktop:size=15",
+    // "CaskaydiaCove Nerd Font Propo SemiBold:size=15",
+    "Designio Bold:size=16",
+    "Material Design Icons Desktop:size=16",
 };
-static const char dmenufont[]       = "Iosevka Medium:size=14";
+static const char dmenufont[]       = "Facebook Sans:size=14";
 static const char col_normfg[]        = "#D8DEE9";
 static const char col_normbg[]       = "#434C5E";
 static const char col_selbo[]       = "#88C0D0";

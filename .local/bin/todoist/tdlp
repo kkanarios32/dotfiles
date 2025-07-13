@@ -95,9 +95,10 @@ def display_tasks_colored(project_map):
 
         # Determine base indent to compare against
         base_indent = min(indent for _, _, _, indent in tasks)
+        max_indent = max(indent for _, _, _, indent in tasks)
 
         for task_id, contexts, description, leading_spaces in tasks:
-            is_subtask = leading_spaces > base_indent
+            is_subtask = leading_spaces == max_indent and leading_spaces > base_indent
             ctx_str = ", ".join([colorize(ctx, ctx_color) for ctx in contexts])
             prefix = "└─ " if is_subtask else ""
             print(

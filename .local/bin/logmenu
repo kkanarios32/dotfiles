@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+alacritty -e bash -l -c 'log'

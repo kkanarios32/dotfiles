@@ -70,6 +70,7 @@ fi
 
 
 # ------------------ set editor --------------------------------------
+_have() { type "$1" &>/dev/null; }
 
 set-editor() {
 	export EDITOR="$1"
@@ -82,7 +83,6 @@ _have "vim" && set-editor vi
 _have "nvim" && set-editor nvim
 
 #----------------------- functions -----------------------------------
-_have() { type "$1" &>/dev/null; }
 
 ghu() {
   pullpush
@@ -111,7 +111,6 @@ PROMPT_LONG=20
 PROMPT_MAX=95
 PROMPT_AT=@
 
-
 wd() {
 	dir="${PWD##*/}"
 	parent="${PWD%"/${dir}"}"
@@ -119,45 +118,59 @@ wd() {
 	echo "$parent/$dir"
 } && export wd
 
+if _have starship; then
+  eval "$(starship init bash)"
+else
+  __ps1() {
+	  echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
+	  local P='$' dir="${PWD##*/}" B countme short long double \
+		  r='\[\e[31m\]' h='\[\e[36m\]' \
+		  u='\[\e[33m\]' p='\[\e[34m\]' w='\[\e[35m\]' \
+		  b='\[\e[36m\]' x='\[\e[0m\]' \
+		  g='\[\e[90m\]' y='\[\e[32m\]'
 
-__ps1() {
-	echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
-	local P='$' dir="${PWD##*/}" B countme short long double \
-		r='\[\e[31m\]' h='\[\e[36m\]' \
-		u='\[\e[33m\]' p='\[\e[34m\]' w='\[\e[35m\]' \
-		b='\[\e[36m\]' x='\[\e[0m\]' \
-		g='\[\e[90m\]' y='\[\e[32m\]'
+	  [[ $EUID == 0 ]] && P='#' && u=$r && p=$u # root
+	  [[ $PWD = / ]] && dir=/
+	  [[ $PWD = "$HOME" ]] && dir='~'
 
-	[[ $EUID == 0 ]] && P='#' && u=$r && p=$u # root
-	[[ $PWD = / ]] && dir=/
-	[[ $PWD = "$HOME" ]] && dir='~'
+	  B="$(git branch --show-current 2>/dev/null)"
+	  [[ $dir = "$B" ]] && B=.
+	  countme="$USER$PROMPT_AT$(hostname):$dir($B)\$ "
 
-	B="$(git branch --show-current 2>/dev/null)"
-	[[ $dir = "$B" ]] && B=.
-	countme="$USER$PROMPT_AT$(hostname):$dir($B)\$ "
+	  [[ $B == master || $B == main ]] && b="$r "
+	  [[ -n "$B" ]] && B="$g($b$B$g)"
+	  [[ -n "$VIRTUAL_ENV" ]] && venv="${g}($y $(basename "$VIRTUAL_ENV")${g})" || venv=""
 
-	[[ $B == master || $B == main ]] && b="$r "
-	[[ -n "$B" ]] && B="$g($b$B$g)"
-	[[ -n "$VIRTUAL_ENV" ]] && venv="${g}($y $(basename "$VIRTUAL_ENV")${g})" || venv=""
+	  short="$u\u$g$PROMPT_AT$h\h$g:$w$dir$B$venv$p$P$x "
+	  long="${g}╔$u\u$g$PROMPT_AT$h\h$g:$w$dir$B$venv\n${g}╚$p$P$x "
+	  double="${g}╔$u\u$g$PROMPT_AT$h\h$g:$w$dir\n${g}║$B$venv\n${g}╚$p$P$x "
 
-	short="$u\u$g$PROMPT_AT$h\h$g:$w$dir$B$venv$p$P$x "
-	long="${g}╔$u\u$g$PROMPT_AT$h\h$g:$w$dir$B$venv\n${g}╚$p$P$x "
-	double="${g}╔$u\u$g$PROMPT_AT$h\h$g:$w$dir\n${g}║$B$venv\n${g}╚$p$P$x "
+	  if ((${#countme} > PROMPT_MAX)); then
+		  PS1="$double"
+	  elif ((${#countme} > PROMPT_LONG)); then
+		  PS1="$long"
+	  else
+		  PS1="$short"
+	  fi
 
-	if ((${#countme} > PROMPT_MAX)); then
-		PS1="$double"
-	elif ((${#countme} > PROMPT_LONG)); then
-		PS1="$long"
-	else
-		PS1="$short"
-	fi
-
-	if _have tmux && [[ -n "$TMUX" ]]; then
-		tmux rename-window "$(wd)"
-	fi
-}
-
+  }
 PROMPT_COMMAND="__ps1"
+fi
+echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
+
+if _have tmux; then
+  if [[ -n "$TMUX" ]]; then
+      tmux rename-window "$(wd)"
+      if [[ -z "$VIMRUNTIME" ]]; then
+	  echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
+      fi
+  fi
+
+  nts() {
+    tmux new-session -n $1 -s $1
+  }
+
+fi
 
 # ---------------- fzf -------------------------------
 if _have fzf; then
@@ -194,3 +207,4 @@ fi
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+

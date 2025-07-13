@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+TMPFILE=$(mktemp)
+alacritty --class Show -e nvim +2 "${TMPFILE}"
+item_name=$(cat ${TMPFILE})
+
+[ -z "$item_name" ] && exit 1
+
+todoist q "$item_name" 
+rm $TMPFILE

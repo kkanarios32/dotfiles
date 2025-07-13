@@ -9,23 +9,29 @@ filter=$(echo "" | dmenu $(dmenuopt) -p "Enter filter:")
 [[ -z $filter ]] && exit 1
 
 case "$filter" in
-    rnc)
+    rc)
         filter='##Research & @next & @coding'
     ;;
-    pnc)
+    rr)
+        filter='##Research & @next & !@coding'
+    ;;
+    pc)
         filter='##Personal & @next & @coding'
     ;;
     ssn)
         filter='##Selfstudy & @next'
     ;;
-    rwn) 
-        filter='##Readwrite & @next'
+    ln) 
+        filter='##Learning & @next'
     ;;
     rs)
         filter='##Research & @someday'
     ;;
     ps)
         filter='##Personal & @someday'
+    ;;
+    ls)
+        filter='##Learning & @someday'
     ;;
 esac
 
