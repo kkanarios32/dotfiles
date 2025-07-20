@@ -119,6 +119,11 @@ wd() {
 } && export wd
 
 if _have starship; then
+  function set_win_title(){
+    echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
+  }
+  starship_precmd_user_func="set_win_title"
+
   eval "$(starship init bash)"
 else
   __ps1() {
@@ -152,11 +157,10 @@ else
 	  else
 		  PS1="$short"
 	  fi
-
+    echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
   }
 PROMPT_COMMAND="__ps1"
 fi
-echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"
 
 if _have tmux; then
   if [[ -n "$TMUX" ]]; then

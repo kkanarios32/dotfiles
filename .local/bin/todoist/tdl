@@ -38,4 +38,4 @@ esac
 cmd="todoist --indent list -f '$filter' | tdlp | less -R"
 echo $cmd
 
-alacritty --class Show -e zsh -c "$cmd"
+alacritty -e zsh -c "$cmd"

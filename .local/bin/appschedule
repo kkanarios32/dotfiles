@@ -14,7 +14,7 @@
     END_TIME="13:00"
 
     # Keywords for allowed URLs in the title
-    ALLOWED_KEYWORDS=("forester" "sterling" "kellenkanarios" "github" "wandb" "localhost" "calendar" "CS336")
+    ALLOWED_KEYWORDS=("scholar" "kellenkanarios" "git" "wandb" "localhost" "calendar" "CS336" "todoist")
 
     # Convert to seconds since midnight
     start_seconds=$((10#${START_TIME%%:*} * 3600 + 10#${START_TIME##*:} * 60))

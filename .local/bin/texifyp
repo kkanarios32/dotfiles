@@ -36,6 +36,10 @@ def html_math_to_latex(text):
         # Replace ||...|| with \left\|...\right\| (optional but recommended)
         return f"${math_content}$"
 
+    text = re.sub(pattern, replace_inline, text, flags=re.DOTALL)
+
+    pattern = r'<math[^>]*display="inline"[^>]*>(.*?)</math>'
+
     return re.sub(pattern, replace_inline, text, flags=re.DOTALL)
 
 

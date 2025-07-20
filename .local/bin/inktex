@@ -26,12 +26,16 @@ def latex_document(latex):
         r"""
         \documentclass[12pt,border=12pt]{standalone}
 
-        \usepackage[utf8]{inputenc}
-        \usepackage[T1]{fontenc}
         \usepackage{textcomp}
         \usepackage{amsmath, amssymb}
-        \newcommand{\R}{\mathbb R}
-
+        \usepackage[T1]{fontenc}% T1 font encoding for hyphenation and accents
+        \usepackage{fontspec}
+        \defaultfontfeatures{Scale=MatchLowercase}
+        \setmainfont{Literata-Regular.ttf}[
+            path = /home/kellen/.fonts/,
+            BoldFont = FacebookSansBold.ttf,
+            ItalicFont = Literata-Italic.ttf,
+            BoldItalicFont = FacebookSansBoldItalic.ttf, ]
         \begin{document}
     """
         + latex
@@ -44,7 +48,15 @@ def compile_latex_to_svg(latex_file):
 
     # Run pdflatex quietly
     subprocess.run(
-        ["pdflatex", "-interaction=nonstopmode", latex_file],
+        [
+            "latexmk",
+            "-pdf",
+            "--shell-escape",
+            "-lualatex",
+            "-g",
+            "-interaction=nonstopmode",
+            latex_file,
+        ],
         cwd=workdir,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
