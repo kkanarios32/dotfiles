@@ -188,6 +188,17 @@ function pomo_notify {
     done
 }
 
+
+function send_msg {
+    if [ "$(uname)" == "Darwin" ]; then
+        osascript -e "tell app \"System Events\" to display dialog \"${1}\"" &> /dev/null
+    elif command -v dunstify &> /dev/null; then
+        dunstify -u critical -a "Pomodoro" "${1}" && paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga
+    else
+        echo "${1}"
+    fi
+}
+
 function pomo_msg_callback {
     block_type=$1
     if [[ $block_type -eq 0 ]]; then
@@ -199,18 +210,6 @@ function pomo_msg_callback {
         exit 1
     fi
     send_msg "$msg"
-}
-
-function send_msg {
-    if [ "$(uname)" == "Darwin" ]; then
-        osascript -e "tell app \"System Events\" to display dialog \"${1}\"" &> /dev/null
-    elif command -v notify-send &> /dev/null; then
-        notify-send -a "Pomodoro" "${1}"
-    elif command -v dunstify &> /dev/null; then
-        dunstify -a "Pomodoro" "${1}"
-    else
-        echo "${1}"
-    fi
 }
 
 #--- Help ---

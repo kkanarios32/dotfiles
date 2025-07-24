@@ -83,6 +83,33 @@ _have "vim" && set-editor vi
 _have "nvim" && set-editor nvim
 
 #----------------------- functions -----------------------------------
+function ipyvim {
+  # $1 session name
+  # $2 virtualenv name (default to current virtualenv)
+  if tmux has-session -t $1 2>/dev/null; then
+    tmux attach -t $1
+  else
+    window_virtualenv=$2
+    if [ "$2" = "" ]; then
+      if [ "$VIRTUAL_ENV" != "" ]; then
+        window_virtualenv="`basename \"$VIRTUAL_ENV\"`"
+      fi
+    fi
+    tmux new-session -d -s $1
+    tmux split-window -d -t $1 -h
+    if [ "$window_virtualenv" != "" ]; then
+      # virtualenv seems to not propagate properly...
+      # inspiration: cenkalti https://github.com/Paczesiowa/virthualenv/issues/38
+      virtualenv_instruction="workon $window_virtualenv"
+      tmux send-keys -t $1 $virtualenv_instruction enter C-l
+      tmux send-keys -t $1.right $virtualenv_instruction enter C-l
+    fi
+    tmux send-keys -t $1.right 'ipython' enter C-l
+    tmux send-keys -t $1.left 'nvim' enter
+    tmux resize-pane -t $1 -R 15
+    tmux attach -t $1
+  fi
+}
 
 ghu() {
   pullpush
