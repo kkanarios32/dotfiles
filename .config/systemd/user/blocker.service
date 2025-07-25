@@ -1,0 +1,12 @@
+# ~/.config/systemd/user/blocker.service
+[Unit]
+Description=Browser Blocker
+After=network.target
+
+[Service]
+ExecStart=/home/kellen/.local/bin/appschedule
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
