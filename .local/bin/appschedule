@@ -7,7 +7,7 @@
 
     export DISPLAY=:0
 
-    app_name="$1"
+    # app_name="$1"
 
     # Blocked usage time window (24-hour format)
     START_TIME="09:00"
@@ -15,6 +15,7 @@
 
     # Keywords for allowed URLs in the title
     ALLOWED_KEYWORDS=("scholar" "kellenkanarios" "git" "wandb" "localhost" "calendar" "CS336" "todoist")
+    DISALLOWED_KEYWORDS=("youtube" "x.com" "crunchyroll" "netflix" "hulu" "paramount" )
 
     # Convert to seconds since midnight
     start_seconds=$((10#${START_TIME%%:*} * 3600 + 10#${START_TIME##*:} * 60))
@@ -35,8 +36,18 @@
         return 1
     }
 
+    check_disallowed_title() {
+        local title="$1"
+        for keyword in "${DISALLOWED_KEYWORDS[@]}"; do
+            if [[ "$title" == *"$keyword"* ]]; then
+                return 0
+            fi
+        done
+        return 1
+    }
+
     while : ; do
-        pid=$(pgrep -x "$app_name")
+        pid=$(pgrep -x "qutebrowser")
         sleep 1
         if [ "$pid" != "" ]; then
             now_seconds=$(get_current_seconds)
@@ -49,16 +60,16 @@
                     window_title=$(echo "$line" | sed 's/^[^ ]* [^ ]* [^ ]* //')
 
                     if [ "$window_title" != "" ]; then
-                        if check_allowed_title "$window_title"; then
-                            sleep 1
-                        else
-                            dunstify "Disallowed window, closing: $window_title"
+                        if check_disallowed_title "$window_title"; then
+                            dunstify -u urgent "Disallowed window, closing: $window_title"
                             xdotool windowclose "$window_id"
+                        else
+                            sleep 1
                         fi
                     fi
                 done
             else
-                sleep 60  # Allow it for a minute before checking again
+                sleep 10  # Allow it for a minute before checking again
             fi
         fi
     done
