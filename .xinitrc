@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 export GOPATH=$HOME/.go
 export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 
@@ -16,7 +18,8 @@ arbtt-capture &
 appschedule qutebrowser &
 
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
-  feh --bg-fill $HOME/Pictures/nord-obito.jpg
+  feh --bg-fill $HOME/Pictures/nord-gojo.png
+  setxkbmap -option ctrl:nocaps
 else 
   feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &
 fi
