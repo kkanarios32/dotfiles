@@ -15,7 +15,6 @@ export PATH
 dwmblocks &
 dunst &
 arbtt-capture &
-appschedule qutebrowser &
 
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
   feh --bg-fill $HOME/Pictures/nord-gojo.png

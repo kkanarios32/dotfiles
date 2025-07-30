@@ -1,12 +1,18 @@
-# ~/.config/systemd/user/blocker.service
 [Unit]
 Description=Browser Blocker
-After=network.target
+After=graphical-session.target
 
 [Service]
+Type=simple
 ExecStart=/home/kellen/.local/bin/appschedule
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/kellen/.Xauthority
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
 
 [Install]
 WantedBy=default.target

@@ -35,7 +35,7 @@ case "$filter" in
     ;;
 esac
 
-cmd="todoist --indent list -f '$filter' | tdlp | less -R"
+cmd="todoist --indent list -f '$filter' | tdlpy | less -R"
 echo $cmd
 
 alacritty -e zsh -c "$cmd"

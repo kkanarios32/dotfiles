@@ -1,35 +1,50 @@
 #!/bin/bash
 
-cd $FORESTDIR
-eval $(opam env --switch=forest)
+_log() {
+  cd $FORESTDIR
+  eval $(opam env --switch=forest)
 
-dir="${FORESTDIR}/trees/daily"
-filename=$(datefile "$*")
-file="$dir/${filename}.tree"
-mkdir -p "${dir}"
+  dir="${FORESTDIR}/trees/daily"
+  filename=$(datefile "$*")
+  file="$dir/${filename}.tree"
+  mkdir -p "${dir}"
 
-# prepend a timestamped heading
+  # prepend a timestamped heading
 
-datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-tmpfile=$(mktemp)
-if [ ! -e "${file}" ]; then
-  echo "\\title{$(now)}" > "${tmpfile}"
-  echo "\\date{${datetag}}" >> "${tmpfile}"
-  cat "${FORESTDIR}/templates/daily.tree" >> ${tmpfile}
-  echo -e "\n" >> "${tmpfile}"
-  mv "${tmpfile}" "${file}"
-  nvim +8 "${file}"
-else
-  nvim + "${file}"
-fi
+  datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  tmpfile=$(mktemp)
+  if [ ! -e "${file}" ]; then
+    echo "\\title{$(now)}" > "${tmpfile}"
+    echo "\\date{${datetag}}" >> "${tmpfile}"
+    cat "${FORESTDIR}/templates/daily.tree" >> ${tmpfile}
+    echo -e "\n" >> "${tmpfile}"
+    mv "${tmpfile}" "${file}"
+    nvim +8 "${file}"
+  else
+    nvim + "${file}"
+  fi
 
-read -p 'Do you want to commit? ' commit
+  read -p 'Do you want to commit? ' commit
 
-if [[ ! $commit =~ ^[Yy] ]]; then
+  if [[ ! $commit =~ ^[Yy] ]]; then
+    exit
+  fi
+
+  cd "${dir}"
+  git add "${file}"
+  git commit
+  git push
+}
+
+# Dispatch logic
+if [[ "$1" == "--log" ]]; then
+  shift
+  _log
   exit
 fi
 
-cd "${dir}"
-git add "${file}"
-git commit
-git push
+if ! tty >/dev/null 2>&1; then
+  alacritty -e bash -l -c "log --log"
+else
+  _log
+fi

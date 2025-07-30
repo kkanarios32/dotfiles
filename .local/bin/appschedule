@@ -1,17 +1,17 @@
 #!/usr/bin/bash
 
-    if [ $# -ne 1 ]; then
-        echo "Usage: $(basename "$0") APP_NAME"
-        exit 1
-    fi
+    # if [ $# -ne 1 ]; then
+    #     echo "Usage: $(basename "$0") APP_NAME"
+    #     exit 1
+    # fi
 
     export DISPLAY=:0
 
-    # app_name="$1"
+    app_name="qutebrowser"
 
     # Blocked usage time window (24-hour format)
     START_TIME="09:00"
-    END_TIME="18:00"
+    END_TIME="20:00"
 
     # Keywords for allowed URLs in the title
     ALLOWED_KEYWORDS=("scholar" "kellenkanarios" "git" "wandb" "localhost" "calendar" "CS336" "todoist")
@@ -47,7 +47,7 @@
     }
 
     while : ; do
-        pid=$(pgrep -x "qutebrowser")
+        pid=$(pgrep -x "$app_name")
         sleep 1
         if [ "$pid" != "" ]; then
             now_seconds=$(get_current_seconds)
@@ -61,7 +61,7 @@
 
                     if [ "$window_title" != "" ]; then
                         if check_disallowed_title "$window_title"; then
-                            dunstify -u urgent "Disallowed window, closing: $window_title"
+                            dunstify -u critical "Disallowed window, closing: $window_title"
                             xdotool windowclose "$window_id"
                         else
                             sleep 1
@@ -69,7 +69,7 @@
                     fi
                 done
             else
-                sleep 10  # Allow it for a minute before checking again
+                sleep 1  # Allow it for a minute before checking again
             fi
         fi
     done
