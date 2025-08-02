@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 _create() {
   cd $FORESTDIR
   eval $(opam env --switch=forest)
@@ -23,12 +24,18 @@ _edit() {
 CMD="$1"
 shift
 
+if ! tty >/dev/null 2>&1; then
+  NAME=$(dmenu -i -l 20 -p "Name:")
+else
+  NAME="$@"
+fi
+
 case "$CMD" in
   add)
-    _create "$@"
+    _create "$NAME"
     ;;
   edit)
-    edit_command="$(declare -f _create; declare -f _edit; echo "_edit \"$@\"")"
+    edit_command="$(declare -f _create; declare -f _edit; echo "_edit \"$NAME\"")"
     alacritty -e bash -c "$edit_command"
     ;;
   *)

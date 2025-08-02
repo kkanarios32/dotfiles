@@ -18,6 +18,7 @@ _log() {
     echo "\\date{${datetag}}" >> "${tmpfile}"
     cat "${FORESTDIR}/templates/daily.tree" >> ${tmpfile}
     echo -e "\n" >> "${tmpfile}"
+    echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
     mv "${tmpfile}" "${file}"
     nvim +8 "${file}"
   else
@@ -36,15 +37,9 @@ _log() {
   git push
 }
 
-# Dispatch logic
-if [[ "$1" == "--log" ]]; then
-  shift
-  _log
-  exit
-fi
-
 if ! tty >/dev/null 2>&1; then
-  alacritty -e bash -l -c "log --log"
+  command="$(declare -f _log; echo "_log")"
+  alacritty -e bash -l -c "$command"
 else
   _log
 fi
