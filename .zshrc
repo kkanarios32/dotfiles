@@ -139,3 +139,5 @@ bindkey '^F' fzf-vim
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 export PATH=$PATH:/home/kellen/.spicetify
+
+. "$HOME/.local/bin/env"
