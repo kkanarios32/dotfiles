@@ -1,4 +1,4 @@
-#!/usr/bin/zsh
+#!/usr/bin/bash
 
 IFACE=$(ip addr | grep cscotun | awk -F': ' '{print $2}')
 

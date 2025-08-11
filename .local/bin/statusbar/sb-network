@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 case "$BUTTON" in
     1) click-network ;;

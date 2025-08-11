@@ -1,6 +1,4 @@
-#!/usr/bin/zsh
-
-#!/usr/bin/zsh
+#!/usr/bin/bash
 
 # Get list of connected sinks with "bluez" in the name
 BT_SINK=$(pactl list short sinks | grep bluez | awk '{print $2}')
@@ -28,5 +26,5 @@ if [ "$mute" != "yes" ]; then
     fi
     echo "^c#D08770^$icon  $volume%^c#FFFFFF^"
 else
-   echo "^c#D08770^󰸈^c #FFFFFF^"
+   echo "^c#D08770^󰸈^c#FFFFFF^"
 fi

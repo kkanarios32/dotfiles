@@ -14,12 +14,12 @@ export PATH
 
 dwmblocks &
 dunst &
-arbtt-capture &
 
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
   feh --bg-fill $HOME/Pictures/nord-gojo.png
   setxkbmap -option ctrl:nocaps
-else 
+else
+  arbtt-capture &
   feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &
 fi
 
