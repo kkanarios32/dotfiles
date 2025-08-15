@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+_deckfile () {
 # 1. Get deck names from AnkiConnect
 DECKS=$(curl -s localhost:8765 \
     -X POST \
@@ -13,7 +14,7 @@ DECKS=$(curl -s localhost:8765 \
 [ -z "$DECKS" ] && { echo "No decks found."; exit 1; }
 
 # 2. Use dmenu to pick a deck
-CHOSEN=$(echo "$DECKS" | dmenu -i -p "Select deck:")
+CHOSEN=$(echo "$DECKS" | dmenu -i -c -h 25 -l 10 -p "Select deck:")
 
 # Exit if user cancels
 [ -z "$CHOSEN" ] && exit 0
@@ -36,3 +37,11 @@ EOF
 nvim +5 "$TMP_FILE"
 
 rm "$TMP_FILE"
+}
+
+if ! tty >/dev/null 2>&1; then
+  command="$(declare -f _deckfile; echo "_deckfile")"
+  alacritty -e bash -l -c "$command"
+else
+  _deckfile
+fi

@@ -12,6 +12,7 @@ import time
 
 from surya.logging import configure_logging, get_logger
 from surya.scripts.config import CLILoader
+from surya.foundation import FoundationPredictor
 from surya.recognition import RecognitionPredictor
 from surya.common.surya.schema import TaskNames
 from surya.input.load import load_image
@@ -52,7 +53,8 @@ logger = get_logger()
 def ocr_latex_cli(input_path: str, **kwargs):
     (image, name) = load_image(input_path)
 
-    texify_predictor = RecognitionPredictor()
+    foundation_predictor = FoundationPredictor()
+    texify_predictor = RecognitionPredictor(foundation_predictor)
     task = [TaskNames.block_without_boxes]
     bboxes = [[[0, 0, image[0].width, image[0].height]]]
 
