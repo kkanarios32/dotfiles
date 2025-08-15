@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# 1. Get deck names from AnkiConnect
+DECKS=$(curl -s localhost:8765 \
+    -X POST \
+    -d '{
+        "action": "deckNames",
+        "version": 6
+    }' \
+    | jq -r '.result[]')
+
+# Exit if no decks returned
+[ -z "$DECKS" ] && { echo "No decks found."; exit 1; }
+
+# 2. Use dmenu to pick a deck
+CHOSEN=$(echo "$DECKS" | dmenu -i -p "Select deck:")
+
+# Exit if user cancels
+[ -z "$CHOSEN" ] && exit 0
+
+# 3. Create temporary .anki file with the selected deck
+TMP_FILE=$(mktemp --suffix=".anki")
+
+cat > "$TMP_FILE" <<EOF
+%%MODELNAME Basic
+%%DECKNAME $CHOSEN
+%%TAGS
+%Front
+
+%Front
+%Back
+
+%Back
+EOF
+
+nvim +5 "$TMP_FILE"
+
+rm "$TMP_FILE"
