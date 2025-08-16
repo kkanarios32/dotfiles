@@ -18,6 +18,8 @@ dunst &
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
   feh --bg-fill $HOME/Pictures/nord-gojo.png
   setxkbmap -option ctrl:nocaps
+  nm-applet --indicator &
+  blueman-applet &
 else
   arbtt-capture &
   feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &

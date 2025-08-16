@@ -6,7 +6,7 @@ static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft  = 0;   /* 0: systray in the right corner, >0: systray on left of status text */
-static const unsigned int systrayspacing = 1;   /* systray spacing */
+static const unsigned int systrayspacing = 4;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
@@ -77,7 +77,7 @@ static const char *screenshotcmd[]  = { "xscreenshot", "-m", "selection", "-s", 
 static const char *browsercmd[]  = { "qutebrowser", NULL };
 static const char *pdfcmd[]  = { "opdf", NULL };
 
-static const char *mutecmd[] = { "set-volume", "mute", NULL };
+static const char *mutecmd[] = { "set-volume", "toggle", NULL };
 static const char *volupcmd[] = { "set-volume", "up", NULL };
 static const char *voldowncmd[] = { "set-volume", "down", NULL };
 

@@ -2422,22 +2422,23 @@ updatestatus(void)
 void
 updatesystrayicongeom(Client *i, int w, int h)
 {
+	int sysbh = bh - 6;
 	if (i) {
-		i->h = bh;
+		i->h = sysbh;
 		if (w == h)
-			i->w = bh;
-		else if (h == bh)
+			i->w = sysbh;
+		else if (h == sysbh)
 			i->w = w;
 		else
-			i->w = (int) ((float)bh * ((float)w / (float)h));
+			i->w = (int) ((float)sysbh * ((float)w / (float)h));
 		applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
 		/* force icons into the systray dimensions if they don't want to */
-		if (i->h > bh) {
+		if (i->h > sysbh) {
 			if (i->w == i->h)
-				i->w = bh;
+				i->w = sysbh;
 			else
-				i->w = (int) ((float)bh * ((float)i->w / (float)i->h));
-			i->h = bh;
+				i->w = (int) ((float)sysbh * ((float)i->w / (float)i->h));
+			i->h = sysbh;
 		}
 	}
 }

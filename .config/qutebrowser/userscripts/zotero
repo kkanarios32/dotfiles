@@ -92,7 +92,7 @@ def notify_error(message):
 
 def main():
     url = e["QUTE_URL"]
-    pdf = False  # start by assuming we're getting html
+    pdf = True  # start by assuming we're getting html
 
     if e["QUTE_MODE"] == "hints":
         if "QUTE_USER_AGENT" in e:
