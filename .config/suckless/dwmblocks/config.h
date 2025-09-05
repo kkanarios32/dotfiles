@@ -17,13 +17,13 @@
 #define TRAILING_DELIMITER 1
 
 // Define blocks for the status feed as X(icon, cmd, interval, signal).
-#define BLOCKS(X)             \
-    X("", "pomo clock", 1, 8) \
-    X("", "sb-time", 60, 6) \
+#define BLOCKS(X)              \
+    X("", "pomo clock", 1, 8)  \
+    X("", "sb-time", 60, 6)    \
     X("", "sb-date", 10000, 5) \
     X("", "sb-battery", 1, 3)
-    /* X("", "sb-volume", 1, 4) \ */
-    /* X("", "sb-network", 1, 1) \ */
-    /* X("", "sb-bluetooth", 10, 2) \ */
-    /* X("", "sb-vpn", 10, 7) \ */
+/* X("", "sb-volume", 1, 4) \ */
+/* X("", "sb-network", 1, 1) \ */
+/* X("", "sb-bluetooth", 10, 2) \ */
+/* X("", "sb-vpn", 10, 7) \ */
 #endif  // CONFIG_H

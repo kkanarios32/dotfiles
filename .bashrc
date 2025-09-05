@@ -11,7 +11,7 @@ esac
 # Set window title to "user@host: current-directory"
 
 export OPENAI_API_KEY=$(cat $HOME/.keys/gpt)
-export CARGO_HOME=/opt/cargo
+export CARGO_HOME=/home/kellen/.cargo
 export QUTE_CONFIG_DIR=$HOME/.config/qutebrowser
 export PATH=$PATH:/home/kellen/.spicetify
 export PROJECTDIR=$HOME/Projects
