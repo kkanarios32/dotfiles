@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# run_ros2.sh
+#
+# Usage:
+#   ./run_ros2.sh /path/to/project1 [/path/to/project2 ...]
+#
+# This will:
+#   - mount each project under /ros2_ws/src/
+#   - persist build/install/log using Docker volumes
+
+# if [ $# -eq 0 ]; then
+#     echo "Usage: $0 /path/to/project1 [/path/to/project2 ...]"
+#     exit 1
+# fi
+
+# Ensure persistent Docker volumes exist
+for vol in ros2_build ros2_install ros2_log; do
+    if ! docker volume inspect "$vol" >/dev/null 2>&1; then
+        echo "Creating Docker volume: $vol"
+        docker volume create "$vol" >/dev/null
+    fi
+done
+
+# Collect all -v mounts for code
+VOLUMES=""
+for path in "$PWD" "$@"; do
+    HOST_PATH=$(realpath "$path")
+    PROJECT_NAME=$(basename "$HOST_PATH")
+    VOLUMES="$VOLUMES -v $HOST_PATH:/ros2_ws/src/$PROJECT_NAME:rw"
+done
+
+# Run the container
+xhost +local:docker
+docker run -it --rm \
+               --net=host \
+               --privileged \
+               --gpus=all \
+               -e NVIDIA_VISIBLE_DEVICES=all \
+               -e NVIDIA_DRIVER_CAPABILITIES=graphics,compute,utility \
+               -e DISPLAY=$DISPLAY \
+               -e PYTHONBUFFERED=1 \
+               $VOLUMES \
+               -v ros2_build:/ros2_ws/build \
+               -v ros2_install:/ros2_ws/install \
+               -v ros2_log:/ros2_ws/log \
+               -v /etc/localtime:/etc/localtime:ro \
+               -v $HOME/$workspace:/root/$workspace:rw \
+               -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+               -v $HOME/.Xauthority:/root/.Xauthority:ro \
+               -v $HOME/.tmux.conf:/root/.tmux.conf \
+               --device=/dev/bus/usb:/dev/bus/usb \
+               ros2_ws \
+               bash \

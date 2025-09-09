@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+export DISPLAY=:0
 export GOPATH=$HOME/.go
 export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 
