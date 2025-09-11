@@ -112,8 +112,8 @@ function ipyvim {
 }
 
 ghu() {
-  pullpush
-  git submodule foreach --recursive pullpush
+  pullpush $1
+  git submodule foreach --recursive pullpush $1
 }
 
 glup(){

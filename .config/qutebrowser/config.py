@@ -10,6 +10,14 @@ c.qt.environ = {
     "NODE_PATH": "/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
 }
 
+# Slack user agent override
+config.set(
+    "content.headers.user_agent",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "https://app.slack.com/*"
+)
+
 c.url.searchengines = {
     "DEFAULT": "https://google.com/search?hl=en&q={}",
     "!gpt": "https://chat.openai.com/?model=gpt-4o&prompt={}",
