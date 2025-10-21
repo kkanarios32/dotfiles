@@ -10,7 +10,10 @@ esac
 
 # Set window title to "user@host: current-directory"
 
+export GOOGLE_API_KEY=$(cat $HOME/.keys/gemini)
+export ANTHROPIC_API_KEY=$(cat $HOME/.keys/claude)
 export OPENAI_API_KEY=$(cat $HOME/.keys/gpt)
+export HF_TOKEN=$(cat $HOME/.keys/hf)
 export CARGO_HOME=/home/kellen/.cargo
 export QUTE_CONFIG_DIR=$HOME/.config/qutebrowser
 export PATH=$PATH:/home/kellen/.spicetify

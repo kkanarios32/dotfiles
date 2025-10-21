@@ -54,3 +54,6 @@ text = "#2e3440"
 
 [window]
 dynamic_title = true
+
+[env]
+TERM = "alacritty"
