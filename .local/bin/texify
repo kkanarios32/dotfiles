@@ -1,12 +1,10 @@
 #!/usr/bin/bash
 
 # Create a temporary file
-APPDIR="$HOME/Projects/dotfiles/.local/opt/surya"
 TMPFILE=$(mktemp --suffix=.png)
 
 maim -s > "$TMPFILE"
 
-# output=$($PYTHON $APPDIR/one_image.py $TMPFILE)
 output=$(pytexify $TMPFILE)
 echo $output | xclip -selection clipboard
 

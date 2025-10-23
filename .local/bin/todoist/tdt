@@ -14,6 +14,13 @@ function labels () {
     echo "$labels"
 }
 
+function priority () {
+    priority=$(dmenu $(dmenuopt) -p "Priority (1-4):")
+    [ -z "$priority" ] && exit 1
+
+    echo "$priority"
+}
+
 kind=$(printf "Subtask\nTask" | dmenu $(dmenuopt) -l 2 -p "What do you want to add?")
 
 [ -z "$kind" ] && exit 1
@@ -58,7 +65,7 @@ if [[ "$kind" = "Subtask" ]]; then
     # Extract the task ID (first field)
     task_id=$(echo "$selected_line" | awk '{print $1}')
 
-    todoist a -I "$task_id" -L "$(labels)" "$item_name"
+    todoist a -I "$task_id" -p "$(priority)" "$item_name"
 else
     # Get list of projects as "ID #Name"
     project_lines=$(todoist projects)
@@ -71,7 +78,7 @@ else
 
     # Exit if nothing selected
     [ -z "$selected_name" ] && exit 1
-    todoist a -N "$selected_name" -L "$(labels)" "$item_name" 
+    todoist a -N "$selected_name" -p "$(priority)" "$item_name" 
 fi
 
 rm $TMPFILE

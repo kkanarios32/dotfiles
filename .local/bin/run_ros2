@@ -2,7 +2,7 @@
 # run_ros2.sh
 #
 # Usage:
-#   ./run_ros2.sh /path/to/project1 [/path/to/project2 ...]
+#   ./run_ros2.sh image_name /path/to/project1 [/path/to/project2 ...]
 #
 # This will:
 #   - mount each project under /ros2_ws/src/
@@ -13,8 +13,13 @@
 #     exit 1
 # fi
 
+BUILD_DIR="$1_build"
+INSTALL_DIR="$1_build"
+LOG_DIR="$1_build"
+VENV_DIR="$1_venv"
+
 # Ensure persistent Docker volumes exist
-for vol in ros2_build ros2_install ros2_log; do
+for vol in $BUILD_DIR $INSTALL_DIR $LOG_DIR $VENV_DIR; do
     if ! docker volume inspect "$vol" >/dev/null 2>&1; then
         echo "Creating Docker volume: $vol"
         docker volume create "$vol" >/dev/null
@@ -23,7 +28,7 @@ done
 
 # Collect all -v mounts for code
 VOLUMES=""
-for path in "$PWD" "$@"; do
+for path in "${@:2}"; do
     HOST_PATH=$(realpath "$path")
     PROJECT_NAME=$(basename "$HOST_PATH")
     VOLUMES="$VOLUMES -v $HOST_PATH:/ros2_ws/src/$PROJECT_NAME:rw"
@@ -41,12 +46,14 @@ docker run -it --rm \
                -e DISPLAY=$DISPLAY \
                -e PYTHONBUFFERED=1 \
                $VOLUMES \
-               -v ros2_build:/ros2_ws/build \
-               -v ros2_install:/ros2_ws/install \
-               -v ros2_log:/ros2_ws/log \
+               -v $BUILD_DIR:/ros2_ws/build \
+               -v $INSTALL_DIR:/ros2_ws/install \
+               -v $LOG_DIR:/ros2_ws/log \
+               -v $VENV_DIR:/ros2_ws/.venv \
                -v /etc/localtime:/etc/localtime:ro \
                -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
                -v $HOME/.Xauthority:/root/.Xauthority:ro \
                --device=/dev/bus/usb:/dev/bus/usb \
-               ros2_ws \
-               bash \
+               "$1" \
+               bash
+               # -v $HOME/.tmux.conf:/root/.tmux.conf \
