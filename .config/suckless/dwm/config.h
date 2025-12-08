@@ -97,6 +97,8 @@ static const char *mutecmd[] = {"set-volume", "toggle", NULL};
 static const char *volupcmd[] = {"set-volume", "up", NULL};
 static const char *voldowncmd[] = {"set-volume", "down", NULL};
 
+static const char *openotecmd[] = {"opennote", NULL};
+
 static const char *brupcmd[] = {"brightnessctl", "set", "10%+", NULL};
 static const char *brdowncmd[] = {"brightnessctl", "set", "10%-", NULL};
 
@@ -116,7 +118,9 @@ static const Key keys[] = {
     {0, XF86XK_MonBrightnessDown, spawn, {.v = brdowncmd}},
     {MODKEY, XK_p, spawn, {.v = dmenucmd}},
     {MODKEY | ShiftMask, XK_p, spawn, {.v = passcmd}},
+    {MODKEY | ShiftMask, XK_p, spawn, {.v = passcmd}},
     {MODKEY | ShiftMask, XK_Return, spawn, {.v = termcmd}},
+    {MODKEY, XK_n, spawn, {.v = openotecmd}},
     {MODKEY, XK_s, spawn, {.v = screenshotcmd}},
     {MODKEY, XK_q, spawn, {.v = browsercmd}},
     {MODKEY, XK_z, spawn, {.v = pdfcmd}},

@@ -31,7 +31,6 @@ def latex_document(latex):
         \usepackage[T1]{fontenc}
         \usepackage{textcomp}
         \usepackage{amsmath, amssymb}
-        \newcommand{\R}{\mathbb R}
 
         \begin{document}
     """
