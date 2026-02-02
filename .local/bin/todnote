@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+eval "$(opam env --switch=forest)"
+cd "$FORESTDIR"
+
+HASTAGS="$HOME/Projects/forest/scripts/hastags"
+
+TERM_CMD=(alacritty -e)
+
+"${TERM_CMD[@]}" bash -lc '"$0" todo | less -R' "$HASTAGS"
