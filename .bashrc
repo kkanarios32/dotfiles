@@ -8,7 +8,19 @@ case $- in
       *) return;;
 esac
 
-# Set window title to "user@host: current-directory"
+export TPU_NAME=tpu-flex-attention
+export PROJECT_ID=flex-tpu
+export ZONE=us-central1-a
+export ACCELERATOR_TYPE=v5litepod-1
+export VERSION=v2-alpha-tpuv5-lite
+
+alias gtpu="gcloud compute tpus tpu-vm create $TPU_NAME \
+  --project=$PROJECT_ID \
+  --zone=$ZONE \
+  --accelerator-type=$ACCELERATOR_TYPE \
+  --version=$VERSION"
+
+alias sshtpu="gcloud compute tpus tpu-vm ssh $TPU_NAME --zone=$ZONE"
 
 export GOOGLE_API_KEY=$(cat $HOME/.keys/gemini)
 export ANTHROPIC_API_KEY=$(cat $HOME/.keys/claude)
@@ -242,7 +254,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/home/kellen/.miniforge3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
@@ -257,3 +268,8 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/kellen/Downloads/google-cloud-sdk/path.bash.inc' ]; then . '/home/kellen/Downloads/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/home/kellen/Downloads/google-cloud-sdk/completion.bash.inc' ]; then . '/home/kellen/Downloads/google-cloud-sdk/completion.bash.inc'; fi

@@ -1,4 +1,4 @@
-alias vpnc="/opt/cisco/secureclient/bin/vpn connect umvpn.umnet.umich.edu/umvpn-all-traffic-alt connect"
+alias vpnc="/opt/cisco/secureclient/bin/vpn connect umvpn.umnet.umich.edu/umvpn-all-traffic-alt"
 alias vpnd="/opt/cisco/secureclient/bin/vpn disconnect"
 alias sshpc="sudo tailscale ssh kellen@kellen-pc"
 alias ta="tmux attach"
@@ -10,6 +10,7 @@ alias asw="arbtt-stats --filter='\$date>='`date -d '7 days ago' +\"%Y-%m-%d\"` -
 alias ?="gpt"
 alias ??='sr google -browser=w3m'
 alias glakes="ssh kellenkk@greatlakes.arc-ts.umich.edu"
+alias yingc="ssh kellenkk@141.212.113.220"
 alias gitl="git log -n 5 --graph --decorate --oneline"
 alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="\.env|\.venv/*|\.local/opt/*|install" --adopt'
 alias dot='cd $DOTFILES'
