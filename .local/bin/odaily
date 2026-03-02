@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+filename=$(datefile "$*")
+
+qutebrowser --target "window" "http://localhost:1234/$filename/index.html"

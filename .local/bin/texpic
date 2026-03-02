@@ -21,34 +21,33 @@ def open_editor(filename):
         ]
     )
 
-
 def latex_document(latex):
     return (
-        r"""
-        \documentclass[12pt,border=12pt]{standalone}
-
-        \usepackage[utf8]{inputenc}
-        \usepackage[T1]{fontenc}
-        \usepackage{textcomp}
-        \usepackage{amsmath, amssymb}
-
-        \begin{document}
-    """
+        r"""\documentclass[12pt,border=12pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{amsmath, amssymb}
+\begin{document}
+"""
         + latex
-        + r"\end{document}"
+        + "\n\\end{document}\n"
     )
 
 
 def compile_latex_to_png(latex_file):
     workdir = tempfile.gettempdir()
 
-    # Run pdflatex quietly
-    subprocess.run(
+    result = subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", latex_file],
         cwd=workdir,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
     )
+    if result.returncode != 0:
+        print(result.stdout)
+
 
     # pdf_file = latex_file.replace(".tex", ".pdf")
     # png_file = latex_file.replace(".tex", ".png")
@@ -95,17 +94,20 @@ def main():
         tf.flush()
         tex_path = tf.name
 
-        tf.write("$$\n\n$$")
+        tf.write(
+        "$$\n\n$$\n"
+        )
         tf.close()
         # Open Vim to edit
         open_editor(tex_path)
         with open(tex_path, "r") as g:
-            latex = g.read().strip()
+            latex = g.read()
 
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".tex", delete=False) as tf:
-        tf.flush()
-        tf.write(latex_document(latex))
         tex_path = tf.name
+        print(tex_path)
+        tf.write(latex_document(latex))
+        tf.flush()
 
     png_path = compile_latex_to_png(tex_path)
     copy_png_to_clipboard(png_path)
