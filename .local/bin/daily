@@ -1,26 +1,99 @@
 #!/bin/bash
 
 _log() {
-  cd $FORESTDIR
-  eval $(opam env --switch=forest)
+  cd "$FORESTDIR" || exit 1
+  eval "$(opam env --switch=forest)"
 
   dir="${FORESTDIR}/trees/daily"
   filename=$(datefile "$*")
   file="$dir/${filename}.tree"
   mkdir -p "${dir}"
+  mkdir -p "${FORESTDIR}/data"
 
-  # prepend a timestamped heading
+  passages_file="${FORESTDIR}/data/meditations_passages.json"
+  read_file="${FORESTDIR}/data/read.json"
 
   datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  tmpfile=$(mktemp)
+
   if [ ! -e "${file}" ]; then
-    echo "\\title{$(now)}" > "${tmpfile}"
-    echo "\\date{${datetag}}" >> "${tmpfile}"
-    cat "${FORESTDIR}/templates/daily.tree" >> ${tmpfile}
-    echo -e "\n" >> "${tmpfile}"
+      quote="$(python3 - <<PY
+import json
+import random
+from pathlib import Path
+
+passages_file = Path(r"""${passages_file}""")
+read_file = Path(r"""${read_file}""")
+
+if not passages_file.exists():
+    print("Meditations passages file not found.")
+    raise SystemExit(0)
+
+with passages_file.open(encoding="utf-8") as f:
+    passages = json.load(f)
+
+if read_file.exists():
+    with read_file.open(encoding="utf-8") as f:
+        read = set(json.load(f))
+else:
+    read = set()
+
+unread = [p for p in passages if p["id"] not in read]
+
+if not unread:
+    print("You have read all passages.")
+    raise SystemExit(0)
+
+today = random.choice(unread)
+
+text = today["text"].replace("\\\\", "\\\\\\\\")
+print("\\\\iblock{")
+print(f"\\\\strong{{Book {today['book']}, Section {today['section']}}}")
+print(f"\\\\em{{{text}}}")
+print("}")
+
+read.add(today["id"])
+with read_file.open("w", encoding="utf-8") as f:
+    json.dump(sorted(read), f, indent=2)
+PY
+)"
+    cat > "${file}" <<DAILYEOF
+\\import{base-macros}
+\\author{kellenkanarios}
+\\meta{author}{false}
+\\tag{private}
+\\title{$(now)}
+\\date{${datetag}}
+
+\\section{Daily Meditations}{
+${quote}
+\\p{\\strong{Translation:}}
+}
+
+\\section{Today's Todos}{
+  \\ol{
+
+  }
+}
+
+\\section{Progress on Todos}{
+
+}
+
+\\section{What did I learn today?}{
+
+}
+
+\\section{Things to maybe look at later.}{
+
+}
+
+\\section{Research Notebook}{
+
+}
+DAILYEOF
+
     echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
-    mv "${tmpfile}" "${file}"
-    nvim +8 "${file}"
+    nvim +12 "${file}"
   else
     nvim + "${file}"
   fi
@@ -31,7 +104,7 @@ _log() {
     exit
   fi
 
-  cd "${dir}"
+  cd "${dir}" || exit 1
   git add "${file}"
   git commit
   git push

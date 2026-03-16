@@ -8,20 +8,6 @@ case $- in
       *) return;;
 esac
 
-export TPU_NAME=tpu-flex-attention
-export PROJECT_ID=flex-tpu
-export ZONE=us-central1-a
-export ACCELERATOR_TYPE=v5litepod-1
-export VERSION=v2-alpha-tpuv5-lite
-
-alias gtpu="gcloud compute tpus tpu-vm create $TPU_NAME \
-  --project=$PROJECT_ID \
-  --zone=$ZONE \
-  --accelerator-type=$ACCELERATOR_TYPE \
-  --version=$VERSION"
-
-alias sshtpu="gcloud compute tpus tpu-vm ssh $TPU_NAME --zone=$ZONE"
-
 export GOOGLE_API_KEY=$(cat $HOME/.keys/gemini)
 export ANTHROPIC_API_KEY=$(cat $HOME/.keys/claude)
 export OPENAI_API_KEY=$(cat $HOME/.keys/gpt)
@@ -131,12 +117,53 @@ ghu() {
   git submodule foreach --recursive pullpush $1
 }
 
-glup(){
+glup() {
   scp -r "$1" kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$2"
 }
 
-gldown(){
+gldown() {
   scp -r kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$1" "$2"
+}
+
+tpup() {
+  local src="$1"
+  gcloud compute tpus tpu-vm scp --recurse "./$src" "${TPU_NAME}:${PROJECT_ID}/$src" --zone="$ZONE"
+}
+
+tpudwn() {
+  local src="$1"
+  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:${PROJECT_ID}/$src" "./$src"  --zone="$ZONE"
+}
+
+gtpu() {
+  gcloud compute tpus tpu-vm create "$TPU_NAME" \
+    --project="$PROJECT_ID" \
+    --zone="$ZONE" \
+    --accelerator-type="$ACCELERATOR_TYPE" \
+    --version="$VERSION" \
+    --metadata startup-script='#! /bin/bash
+      curl -LsSf https://astral.sh/uv/0.10.9/install.sh | sh
+      EOF'
+}
+  
+tpustop() {
+  gcloud compute tpus tpu-vm stop "$TPU_NAME" \
+    --zone="$ZONE"
+}
+
+tpustart() {
+  gcloud compute tpus tpu-vm start "$TPU_NAME" \
+    --zone="$ZONE"
+}
+
+sshtpu() {
+  gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$ZONE"
+}
+
+tpudel() {
+  gcloud compute tpus tpu-vm delete "$TPU_NAME" \
+    --project="$PROJECT_ID" \
+    --zone="$ZONE"
 }
 
 pcup(){
