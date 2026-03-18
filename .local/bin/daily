@@ -15,6 +15,51 @@ _log() {
 
   datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+  # Try to pull yesterday's "Tomorrow's Todos" into today's "Today's Todos"
+  yesterday_file="$dir/$(datefile yesterday).tree"
+  carried_todos="$(
+    python3 - <<PY
+from pathlib import Path
+
+yesterday_file = Path(r"""${yesterday_file}""")
+
+if not yesterday_file.exists():
+    print("")
+    raise SystemExit(0)
+
+text = yesterday_file.read_text(encoding="utf-8")
+
+marker = r"\section{Tomorrow's Todos}{"
+start = text.find(marker)
+
+if start == -1:
+    print("")
+    raise SystemExit(0)
+
+i = start + len(marker)
+depth = 1
+content = []
+
+while i < len(text) and depth > 0:
+    c = text[i]
+
+    if c == "{":
+        depth += 1
+    elif c == "}":
+        depth -= 1
+        if depth == 0:
+            break
+
+    content.append(c)
+    i += 1
+
+result = "".join(content)
+if result.startswith("\n"):
+    result = result[1:]
+print(result.rstrip())
+PY
+)"
+
   if [ ! -e "${file}" ]; then
       quote="$(python3 - <<PY
 import json
@@ -70,9 +115,7 @@ ${quote}
 }
 
 \\section{Today's Todos}{
-  \\ol{
-
-  }
+${carried_todos}
 }
 
 \\section{Progress on Todos}{
@@ -87,12 +130,12 @@ ${quote}
 
 }
 
-\\section{Research Notebook}{
+\\section{Tomorrow's Todos}{
 
 }
 DAILYEOF
 
-    echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
+    # echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
     nvim +12 "${file}"
   else
     nvim + "${file}"

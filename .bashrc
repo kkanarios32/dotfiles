@@ -125,6 +125,11 @@ gldown() {
   scp -r kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$1" "$2"
 }
 
+createbucket() {
+  gcloud storage buckets create "gs://$BUCKET_NAME" \
+      --location=US
+}
+
 tpup() {
   local src="$1"
   gcloud compute tpus tpu-vm scp --recurse "./$src" "${TPU_NAME}:${PROJECT_ID}/$src" --zone="$ZONE"
@@ -132,7 +137,7 @@ tpup() {
 
 tpudwn() {
   local src="$1"
-  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:${PROJECT_ID}/$src" "./$src"  --zone="$ZONE"
+  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:/home/kellen/${PROJECT_ID}/$src" "./$src"  --zone="$ZONE"
 }
 
 gtpu() {
@@ -157,7 +162,7 @@ tpustart() {
 }
 
 sshtpu() {
-  gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$ZONE"
+  gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$ZONE" -- -L 6006:localhost:6006
 }
 
 tpudel() {
