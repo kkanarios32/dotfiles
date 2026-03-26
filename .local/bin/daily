@@ -122,20 +122,12 @@ ${carried_todos}
 
 }
 
-\\section{What did I learn today?}{
-
-}
-
-\\section{Things to maybe look at later.}{
-
-}
-
 \\section{Tomorrow's Todos}{
 
 }
 DAILYEOF
 
-    # echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
+    echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
     nvim +12 "${file}"
   else
     nvim + "${file}"

@@ -137,7 +137,7 @@ tpup() {
 
 tpudwn() {
   local src="$1"
-  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:/home/kellen/${PROJECT_ID}/$src" "./$src"  --zone="$ZONE"
+  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:/home/kellen/${PROJECT_ID}/$src" "$2"  --zone="$ZONE"
 }
 
 gtpu() {
@@ -177,6 +177,14 @@ pcup(){
 
 pcdown(){
   scp -r kellen@kellen-pc.tail82ceca.ts.net:"$1" "$2"
+}
+
+yingup(){
+  scp -r "$1" kellenkk@141.212.113.220:"$2"
+}
+
+yingdown(){
+  scp -r kellenkk@141.212.113.220:"$SERVER_OUTPUT_DIR" "$1"
 }
 
 #----------------------- set status bar ----------------------------
