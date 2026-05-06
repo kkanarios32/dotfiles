@@ -130,15 +130,20 @@ createbucket() {
       --location=US
 }
 
-tpup() {
-  local src="$1"
-  gcloud compute tpus tpu-vm scp --recurse "./$src" "${TPU_NAME}:${PROJECT_ID}/$src" --zone="$ZONE"
+
+_tpu_ip() {
+  gcloud compute tpus tpu-vm describe "$TPU_NAME" --zone="$ZONE" \
+    --format='value(networkEndpoints[0].accessConfig.externalIp)'
 }
 
-tpudwn() {
-  local src="$1"
-  gcloud compute tpus tpu-vm scp --recurse "${TPU_NAME}:/home/kellen/${PROJECT_ID}/$src" "$2"  --zone="$ZONE"
+_tpu_rsync() {
+  rsync -azP \
+    -e "ssh -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=accept-new" \
+    "$@"
 }
+
+tpup()   { _tpu_rsync --filter=':- .gitignore' "./$1" "kellen@$(_tpu_ip):$PROJECT_ID/${2:-.}"; }
+tpudwn() { _tpu_rsync "kellen@$(_tpu_ip):/home/kellen/$PROJECT_ID/$1" "${2:-.}"; }
 
 gtpu() {
   gcloud compute tpus tpu-vm create "$TPU_NAME" \
@@ -184,7 +189,7 @@ yingup(){
 }
 
 yingdown(){
-  scp -r kellenkk@141.212.113.220:"$SERVER_OUTPUT_DIR" "$1"
+  scp -rp kellenkk@141.212.113.220:"$SERVER_OUTPUT_DIR" "$1"
 }
 
 #----------------------- set status bar ----------------------------

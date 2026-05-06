@@ -13,7 +13,7 @@ alias glakes="ssh kellenkk@greatlakes.arc-ts.umich.edu"
 alias yingc="ssh kellenkk@141.212.113.220"
 alias gitl="git log -n 5 --graph --decorate --oneline"
 alias udots='stow -d "$DOTFILES" -t "$HOME" -v . --ignore="\.env|\.venv/*|\.local/opt/*|install" --adopt'
-alias dot='cd $DOTFILES'
+alias dots='cd $DOTFILES'
 alias cdf='cd $FORESTDIR'
 alias scripts='cd $DOTFILES/.local/bin'
 alias today="gcalcli agenda '$(date +%Y-%m-%d)' '$(date -d tomorrow +%Y-%m-%d)' --military --nodeclined"

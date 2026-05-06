@@ -41,9 +41,22 @@ fi
 
 #--- Pomodoro functions ---
 
+function pomo_prompt_time {
+    # Prompt via dmenu for the work block duration in minutes and persist it
+    # to ${POMO}.worktime so subsequent invocations pick it up. Returns 1 if
+    # the user cancels or enters an invalid value.
+    command -v dmenu &> /dev/null || return 0
+    [[ -n $DISPLAY || -n $WAYLAND_DISPLAY ]] || return 0
+    local chosen
+    chosen=$(printf '50\n25\n15\n5\n' | dmenu -p "Work block (min):") || return 1
+    [[ $chosen =~ ^[0-9]+$ ]] || return 1
+    echo "$chosen" > "${POMO}.worktime"
+}
+
 function pomo_start {
     # Start new pomo block (work+break cycle).
     test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
+    pomo_prompt_time || return 1
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
 }
@@ -57,7 +70,7 @@ function pomo_isstopped {
 
 function pomo_stop {
     # Stop pomo cycles.
-    rm -f "$POMO"
+    rm -f "$POMO" "${POMO}.worktime"
 }
 
 function pomo_stamp {
@@ -265,7 +278,8 @@ POMO_FILE
 POMO_WORK_TIME
     Duration of the work period in minutes.  Default: 25.
 POMO_BREAK_TIME
-    Duration of the break period in minutes.  Default: 5.
+    Ignored. Break time is derived from the work time: 5 minutes per 50
+    minutes of work, plus 5 (e.g. 0-49 -> 5, 50-99 -> 10, 100-149 -> 15).
 POMO_MSG_CALLBACK
    Function to call at the end of a period, with argument of 0 for end of a
    work period and 1 for the end of a break period. Default: pomo_msg_callback.
@@ -305,7 +319,8 @@ done
 [[ -e ${config} ]] && source "${config}"
 POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
 WORK_TIME=${POMO_WORK_TIME:-50}
-BREAK_TIME=${POMO_BREAK_TIME:-10}
+[[ -e "${POMO}.worktime" ]] && WORK_TIME=$(cat "${POMO}.worktime")
+BREAK_TIME=$(( WORK_TIME / 50 * 5 + 5 ))
 MSG_CALLBACK=${POMO_MSG_CALLBACK:-pomo_msg_callback}
 
 #--- Run! ---

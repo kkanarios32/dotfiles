@@ -1,0 +1,103 @@
+#!/usr/bin/bash
+
+_log() {
+  cd "$FORESTDIR" || exit 1
+  eval "$(opam env --switch=forest)"
+
+  dir="${FORESTDIR}/trees/research"
+  filename="r$(datefile "$*")"
+  file="$dir/${filename}.tree"
+  mkdir -p "${dir}"
+
+  datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  yesterday_file="$dir/$(datefile yesterday).tree"
+  carried_next="$(
+    python3 - <<PY
+from pathlib import Path
+
+yesterday_file = Path(r"""${yesterday_file}""")
+
+if not yesterday_file.exists():
+    print("")
+    raise SystemExit(0)
+
+text = yesterday_file.read_text(encoding="utf-8")
+
+marker = r"\section{Next Steps}{"
+start = text.find(marker)
+
+if start == -1:
+    print("")
+    raise SystemExit(0)
+
+i = start + len(marker)
+depth = 1
+content = []
+
+while i < len(text) and depth > 0:
+    c = text[i]
+
+    if c == "{":
+        depth += 1
+    elif c == "}":
+        depth -= 1
+        if depth == 0:
+            break
+
+    content.append(c)
+    i += 1
+
+result = "".join(content)
+if result.startswith("\n"):
+    result = result[1:]
+print(result.rstrip())
+PY
+)"
+
+  if [ ! -e "${file}" ]; then
+    cat > "${file}" <<RESEARCHEOF
+\\import{base-macros}
+\\author{kellenkanarios}
+\\meta{author}{false}
+\\tag{private}
+\\title{r$(now)}
+\\date{${datetag}}
+
+\\section{Questions}{
+${carried_next}
+}
+
+\\section{Notes}{
+
+}
+
+\\section{Next Steps}{
+
+}
+RESEARCHEOF
+
+    echo "\\transclude{${filename}}" >> "${dir}/research.tree"
+    nvim +10 "${file}"
+  else
+    nvim + "${file}"
+  fi
+
+  read -p 'Do you want to commit? ' commit
+
+  if [[ ! $commit =~ ^[Yy] ]]; then
+    exit
+  fi
+
+  cd "${dir}" || exit 1
+  git add "${file}"
+  git commit
+  git push
+}
+
+if ! tty >/dev/null 2>&1; then
+  command="$(declare -f _log; echo "_log")"
+  alacritty -e bash -l -c "$command"
+else
+  _log
+fi

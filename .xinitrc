@@ -15,6 +15,7 @@ export PATH
 
 dwmblocks &
 dunst &
+pomo notify &
 
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
   feh --bg-fill $HOME/Pictures/nord-gojo.png
