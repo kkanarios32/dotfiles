@@ -90,14 +90,16 @@ static const char *passcmd[] = {"passmenu", "-l",  "5",       "-h",
                                 "25",       "-fn", dmenufont, NULL};
 static const char *screenshotcmd[] = {"xscreenshot", "-m", "selection",
                                       "-s",          "-c", NULL};
-static const char *browsercmd[] = {"qutebrowser", NULL};
+static const char *browsercmd[] = {"firefox", NULL};
 static const char *pdfcmd[] = {"opdf", NULL};
 
 static const char *mutecmd[] = {"set-volume", "toggle", NULL};
 static const char *volupcmd[] = {"set-volume", "up", NULL};
 static const char *voldowncmd[] = {"set-volume", "down", NULL};
 
-static const char *openotecmd[] = {"opennote", NULL};
+static const char *openotecmd[] = {"openote", NULL};
+static const char *mknotecmd[] = {"mknote", NULL};
+static const char *editnotecmd[] = {"editnote", NULL};
 
 static const char *brupcmd[] = {"brightnessctl", "set", "10%+", NULL};
 static const char *brdowncmd[] = {"brightnessctl", "set", "10%-", NULL};
@@ -121,6 +123,8 @@ static const Key keys[] = {
     {MODKEY | ShiftMask, XK_p, spawn, {.v = passcmd}},
     {MODKEY | ShiftMask, XK_Return, spawn, {.v = termcmd}},
     {MODKEY, XK_n, spawn, {.v = openotecmd}},
+    {MODKEY | ShiftMask, XK_n, spawn, {.v = mknotecmd}},
+    {MODKEY, XK_e, spawn, {.v = editnotecmd}},
     {MODKEY, XK_s, spawn, {.v = screenshotcmd}},
     {MODKEY, XK_q, spawn, {.v = browsercmd}},
     {MODKEY, XK_z, spawn, {.v = pdfcmd}},

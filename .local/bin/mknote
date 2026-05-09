@@ -1,0 +1,26 @@
+#!/bin/bash
+
+_create() {
+  cd "$FORESTDIR"
+  eval "$(opam env --switch=forest)"
+  FILENAME=$(opam exec -- forester new --random --dest="$FORESTDIR/trees/todo")
+  TITLE="$*"
+
+  echo "\\title{$TITLE}" >> "$FILENAME"
+  cat "$FORESTDIR/templates/todo.tree" >> "$FILENAME"
+  echo "$FILENAME"
+}
+
+_edit() {
+  FILENAME=$(_create "$@")
+  nvim "$FILENAME"
+}
+
+if [[ $# -eq 0 ]]; then
+  TITLE=$(dmenu -i -l 20 -p "Title:" < /dev/null)
+  [[ -z $TITLE ]] && exit 1
+  edit_command="$(declare -f _create; declare -f _edit; echo "_edit \"$TITLE\"")"
+  alacritty -e bash -c "$edit_command"
+else
+  _edit "$@"
+fi

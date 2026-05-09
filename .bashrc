@@ -15,9 +15,6 @@ export HF_TOKEN=$(cat $HOME/.keys/hf)
 export CARGO_HOME=/home/kellen/.cargo
 export QUTE_CONFIG_DIR=$HOME/.config/qutebrowser
 export PATH=$PATH:/home/kellen/.spicetify
-export PROJECTDIR=$HOME/Projects
-export FORESTDIR=$PROJECTDIR/forest
-export DOTFILES=$PROJECTDIR/dotfiles
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options

@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
-# Path to Zotero storage directory
-ZOTERO_STORAGE="$HOME/Downloads/pdfs/storage"
+# Path to papers directory
+ZOTERO_STORAGE="$HOME/Downloads/papers"
 
 # Build a map: short name -> full path
 declare -A pdf_map

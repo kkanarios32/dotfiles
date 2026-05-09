@@ -3,6 +3,9 @@
 export DISPLAY=:0
 export GOPATH=$HOME/.go
 export NODE_PATH="/home/kellen/.nvm/versions/node/v22.15.0/lib/node_modules"
+export PROJECTDIR=$HOME/Projects
+export FORESTDIR=$PROJECTDIR/forest
+export DOTFILES=$PROJECTDIR/dotfiles
 
 PATH="$(find -L /opt -type d -name bin 2>/dev/null | paste -sd: -):$PATH"
 PATH="$(find -L /opt -mindepth 1 -maxdepth 1 -type d | paste -sd: -):$PATH"

@@ -15,10 +15,10 @@ while IFS= read -r -d '' title && IFS= read -r -d '' path; do
 done < <(jq -j '.[] | (.title + "\u0000" + .sourcePath + "\u0000")' "$TMPFILE")
 rm "$TMPFILE"
 
-SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Open Note:")
+SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Edit Note:")
 [[ -z $SELECTED ]] && exit 1
 
 SOURCEPATH="${PATHS[$SELECTED]}"
-SLUG=$(basename "$SOURCEPATH" .tree)
 
-firefox --new-window "http://localhost:1234/$SLUG/index.html"
+# Launch Alacritty with nvim on selected file
+alacritty -e bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""
