@@ -1,0 +1,72 @@
+#!/usr/bin/bash
+# Scaffold a new LaTeX paper directory: copies kellen.sty, bib.bst, fonts/,
+# and Makefile from ~/Projects/latex, and writes a main.tex / references.bib
+# template wired up to use them.
+
+set -euo pipefail
+
+LATEX_DIR="$HOME/Projects/latex"
+PAPER_SRC="$LATEX_DIR/paper"
+
+if [ $# -lt 1 ]; then
+    echo "usage: newpaper <directory>" >&2
+    exit 2
+fi
+
+TARGET="$1"
+
+if [ -e "$TARGET" ] && [ -n "$(ls -A "$TARGET" 2>/dev/null || true)" ]; then
+    echo "newpaper: '$TARGET' already exists and is not empty" >&2
+    exit 1
+fi
+
+mkdir -p "$TARGET"
+
+cp "$PAPER_SRC/kellen.sty" "$TARGET/"
+cp "$PAPER_SRC/bib.bst"    "$TARGET/"
+cp -r "$PAPER_SRC/fonts"   "$TARGET/"
+cp "$LATEX_DIR/Makefile"   "$TARGET/"
+
+cat > "$TARGET/main.tex" <<'EOF'
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{kellen}
+\usepackage{amssymb}
+\usepackage{empheq}
+\usepackage{algorithm}
+\usepackage{booktabs}
+\usepackage{algpseudocode}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\given}{\,\vert\,}
+
+\setrunningtitle{Running Title}
+\title{Paper Title}
+\author{Kellen Kanarios\textsuperscript{1}}
+\emails{kellenkk@umich.edu}
+
+\affiliations{
+$^{1}$\textbf{Department of Electrical and Computer Engineering, University of Michigan}\\
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Abstract goes here.
+\end{abstract}
+
+\section{Introduction}
+
+Introduction goes here.
+
+\newpage
+\bibliographystyle{bib}
+\bibliography{references}
+
+\end{document}
+EOF
+
+: > "$TARGET/references.bib"
+
+echo "newpaper: scaffolded $TARGET"
