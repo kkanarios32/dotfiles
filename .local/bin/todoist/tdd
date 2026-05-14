@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""tdd — todoist daily todo manager.
+
+Operates on today's forester daily tree at
+$FORESTDIR/trees/daily/YYYY-MM-DD.tree, manipulating \\tdtask{id}{content}
+entries inside the "Today's Todos" section. Completing a task syncs the
+completion to todoist via the `todoist` CLI.
+"""
+
+import os
+import re
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+FOREST_DIR = Path(os.environ.get("FORESTDIR", os.path.expanduser("~/Projects/forest")))
+DAILY_DIR = FOREST_DIR / "trees" / "daily"
+TODAY = date.today().isoformat()
+FILE = DAILY_DIR / f"{TODAY}.tree"
+SECTION_TODAY = r"\section{Today's Todos}{"
+SECTION_TOMORROW = r"\section{Tomorrow's Todos}{"
+
+
+def require_file():
+    if not FILE.exists():
+        sys.stderr.write(f"Today's tree doesn't exist yet: {FILE}\n")
+        sys.stderr.write("Run `daily` first to bootstrap it.\n")
+        sys.exit(1)
+
+
+def find_section_bounds(text, section_marker=SECTION_TODAY):
+    start = text.find(section_marker)
+    if start == -1:
+        return None
+    i = start + len(section_marker)
+    depth = 1
+    j = i
+    while j < len(text) and depth > 0:
+        c = text[j]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    return i, j
+
+
+def parse_balanced_arg(s, k):
+    assert s[k] == "{"
+    k += 1
+    start = k
+    depth = 1
+    while k < len(s) and depth > 0:
+        if s[k] == "{":
+            depth += 1
+        elif s[k] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        k += 1
+    return s[start:k], k + 1
+
+
+def parse_tasks(text, section_marker=SECTION_TODAY):
+    bounds = find_section_bounds(text, section_marker)
+    if not bounds:
+        return
+    inner = text[bounds[0]:bounds[1]]
+    for m in re.finditer(r"\\(tdtaskx|tdtask)\{", inner):
+        kind = m.group(1)
+        k = m.end() - 1
+        tid, k = parse_balanced_arg(inner, k)
+        if k >= len(inner) or inner[k] != "{":
+            continue
+        content, k = parse_balanced_arg(inner, k)
+        yield kind, tid, content
+
+
+def all_task_ids(text):
+    """All todoist IDs referenced anywhere in the tree file."""
+    return set(re.findall(r"\\tdtaskx?\{([^}]+)\}", text))
+
+
+def fzf(items, prompt, multi=True):
+    """items: list of (display, key). Returns list of selected keys."""
+    args = ["fzf", "--prompt", prompt, "--height=60%", "--reverse",
+            "--with-nth=2..", "--delimiter=\t"]
+    if multi:
+        args.append("--multi")
+    input_data = "\n".join(f"{key}\t{disp}" for disp, key in items)
+    try:
+        result = subprocess.run(args, input=input_data, capture_output=True, text=True)
+    except FileNotFoundError:
+        sys.stderr.write("fzf not installed.\n")
+        sys.exit(1)
+    if result.returncode != 0:
+        return []
+    keys = []
+    for line in result.stdout.strip().split("\n"):
+        if line:
+            keys.append(line.split("\t", 1)[0])
+    return keys
+
+
+def list_todoist_tasks():
+    result = subprocess.run(["todoist", "--csv", "list"],
+                            capture_output=True, text=True, check=True)
+    tasks = []
+    for line in result.stdout.strip().split("\n"):
+        if not line:
+            continue
+        parts = line.split(",", 5)
+        if len(parts) < 6:
+            continue
+        tid, pri, due, proj, lbl, content = parts
+        tasks.append({"id": tid, "priority": pri, "due": due,
+                      "project": proj, "labels": lbl, "content": content})
+    return tasks
+
+
+def insert_task(tid, content, section_marker=SECTION_TODAY):
+    text = FILE.read_text(encoding="utf-8")
+    bounds = find_section_bounds(text, section_marker)
+    if not bounds:
+        sys.stderr.write(f"Section {section_marker!r} not found in {FILE}\n")
+        sys.exit(1)
+    inner = text[bounds[0]:bounds[1]].rstrip()
+    entry = f"\n  \\tdtask{{{tid}}}{{{content}}}"
+    new_inner = inner + entry + "\n"
+    FILE.write_text(text[:bounds[0]] + new_inner + text[bounds[1]:], encoding="utf-8")
+
+
+def mark_done_in_file(tid):
+    text = FILE.read_text(encoding="utf-8")
+    pattern = r"\\tdtask\{" + re.escape(tid) + r"\}"
+    new_text, n = re.subn(pattern, r"\\tdtaskx{" + tid + "}", text)
+    if n == 0:
+        return False
+    FILE.write_text(new_text, encoding="utf-8")
+    return True
+
+
+def cmd_ls():
+    require_file()
+    tasks = list(parse_tasks(FILE.read_text(encoding="utf-8")))
+    if not tasks:
+        print("No todoist tasks in today's list.")
+        return
+    for kind, _, content in tasks:
+        if kind == "tdtaskx":
+            print(f"  \033[9;90m✓ {content}\033[0m")
+        else:
+            print(f"  ○ {content}")
+
+
+def cmd_add(tomorrow=False):
+    require_file()
+    section = SECTION_TOMORROW if tomorrow else SECTION_TODAY
+    label = "tomorrow" if tomorrow else "today"
+    existing = all_task_ids(FILE.read_text(encoding="utf-8"))
+    candidates = [t for t in list_todoist_tasks() if t["id"] not in existing]
+    if not candidates:
+        print("No todoist tasks available (or all already in today's tree).")
+        return
+    items = [(f"{t['priority']:<3} {t['project']:<25} {t['content']}", t["id"])
+             for t in candidates]
+    selected = fzf(items, f"Add to {label}: ", multi=True)
+    if not selected:
+        return
+    id_map = {t["id"]: t for t in candidates}
+    for tid in selected:
+        t = id_map[tid]
+        insert_task(tid, t["content"], section)
+        print(f"  + [{label}] {t['content']}")
+
+
+def cmd_done():
+    require_file()
+    pending = [(tid, content)
+               for kind, tid, content in parse_tasks(FILE.read_text(encoding="utf-8"))
+               if kind == "tdtask"]
+    if not pending:
+        print("No pending todoist tasks today.")
+        return
+    items = [(content, tid) for tid, content in pending]
+    selected = fzf(items, "Mark done: ", multi=True)
+    if not selected:
+        return
+    content_map = dict(pending)
+    for tid in selected:
+        r = subprocess.run(["todoist", "c", tid], capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.stderr.write(f"  ! todoist failed for {content_map[tid]}: {r.stderr.strip()}\n")
+            continue
+        if mark_done_in_file(tid):
+            print(f"  ✓ {content_map[tid]}")
+        else:
+            sys.stderr.write(f"  ! could not update local file for {content_map[tid]}\n")
+
+
+USAGE = """tdd — todoist daily todo manager
+
+USAGE:
+  tdd                  list today's todos
+  tdd add              fuzzy-pick todoist tasks to add to today
+  tdd add -t           same, but queue under Tomorrow's Todos
+                       (daily will carry them into the next day's list)
+  tdd done             fuzzy-pick pending tasks to mark done (syncs to todoist)
+  tdd help             show this help"""
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else "ls"
+    rest = args[1:]
+    if cmd in ("ls", "list"):
+        cmd_ls()
+    elif cmd == "add":
+        tomorrow = any(a in ("-t", "--tomorrow") for a in rest)
+        cmd_add(tomorrow=tomorrow)
+    elif cmd == "done":
+        cmd_done()
+    elif cmd in ("help", "-h", "--help"):
+        print(USAGE)
+    else:
+        sys.stderr.write(USAGE + "\n")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

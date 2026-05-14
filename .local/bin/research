@@ -4,83 +4,47 @@ _log() {
   cd "$FORESTDIR" || exit 1
   eval "$(opam env --switch=forest)"
 
-  dir="${FORESTDIR}/trees/research"
-  filename="r$(datefile "$*")"
-  file="$dir/${filename}.tree"
-  mkdir -p "${dir}"
+  notebook_name="$1"
+  research_root="${FORESTDIR}/trees/research"
+  notebook_dir="${research_root}/${notebook_name}"
+  notebook_index="${notebook_dir}/${notebook_name}.tree"
 
   datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-  yesterday_file="$dir/$(datefile yesterday).tree"
-  carried_next="$(
-    python3 - <<PY
-from pathlib import Path
-
-yesterday_file = Path(r"""${yesterday_file}""")
-
-if not yesterday_file.exists():
-    print("")
-    raise SystemExit(0)
-
-text = yesterday_file.read_text(encoding="utf-8")
-
-marker = r"\section{Next Steps}{"
-start = text.find(marker)
-
-if start == -1:
-    print("")
-    raise SystemExit(0)
-
-i = start + len(marker)
-depth = 1
-content = []
-
-while i < len(text) and depth > 0:
-    c = text[i]
-
-    if c == "{":
-        depth += 1
-    elif c == "}":
-        depth -= 1
-        if depth == 0:
-            break
-
-    content.append(c)
-    i += 1
-
-result = "".join(content)
-if result.startswith("\n"):
-    result = result[1:]
-print(result.rstrip())
-PY
-)"
-
-  if [ ! -e "${file}" ]; then
-    cat > "${file}" <<RESEARCHEOF
+  if [ ! -d "${notebook_dir}" ]; then
+    mkdir -p "${notebook_dir}"
+    cat > "${notebook_index}" <<NOTEBOOKEOF
 \\import{base-macros}
 \\author{kellenkanarios}
 \\meta{author}{false}
 \\tag{private}
-\\title{r$(now)}
+\\title{Research Notebook: ${notebook_name}}
 \\date{${datetag}}
+NOTEBOOKEOF
+    nvim + "${notebook_index}"
+  else
+    date_slug=$(datefile)
+    daily_filename="${notebook_name}-${date_slug}"
+    daily_file="${notebook_dir}/${daily_filename}.tree"
 
-\\section{Questions}{
-${carried_next}
-}
+    if [ ! -e "${daily_file}" ]; then
+      cat > "${daily_file}" <<DAILYEOF
+\\import{base-macros}
+\\author{kellenkanarios}
+\\meta{author}{false}
+\\tag{private}
+\\title{[${notebook_name}](${notebook_name}) - $(now)}
+\\date{${datetag}}
 
 \\section{Notes}{
 
 }
-
-\\section{Next Steps}{
-
-}
-RESEARCHEOF
-
-    echo "\\transclude{${filename}}" >> "${dir}/research.tree"
-    nvim +10 "${file}"
-  else
-    nvim + "${file}"
+DAILYEOF
+      echo "\\transclude{${daily_filename}}" >> "${notebook_index}"
+      nvim +10 "${daily_file}"
+    else
+      nvim + "${daily_file}"
+    fi
   fi
 
   read -p 'Do you want to commit? ' commit
@@ -89,15 +53,22 @@ RESEARCHEOF
     exit
   fi
 
-  cd "${dir}" || exit 1
-  git add "${file}"
+  cd "${research_root}" || exit 1
+  git add -A "${notebook_dir}"
   git commit
   git push
 }
 
+research_root="${FORESTDIR}/trees/research"
+mkdir -p "${research_root}"
+
+existing=$(find "${research_root}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
+notebook_name=$(printf '%s\n' "${existing}" | dmenu -i -l 20 -p "Notebook:")
+[[ -z $notebook_name ]] && exit 1
+
 if ! tty >/dev/null 2>&1; then
-  command="$(declare -f _log; echo "_log")"
+  command="$(declare -f _log; echo "_log \"${notebook_name}\"")"
   alacritty -e bash -l -c "$command"
 else
-  _log
+  _log "${notebook_name}"
 fi
