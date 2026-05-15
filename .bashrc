@@ -186,7 +186,16 @@ yingup(){
 }
 
 yingdown(){
-  scp -rp kellenkk@141.212.113.220:"$SERVER_OUTPUT_DIR" "$1"
+  local server_dir user_dir
+  if [ "$#" -eq 1 ]; then
+      server_dir=$SERVER_OUTPUT_DIR
+      user_dir="$1"
+  else
+      server_dir="${1:-$SERVER_OUTPUT_DIR}"
+      user_dir="$2"
+  fi
+
+  scp -rp kellenkk@141.212.113.220:"$server_dir" "$user_dir"
 }
 
 #----------------------- set status bar ----------------------------
