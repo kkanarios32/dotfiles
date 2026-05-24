@@ -109,6 +109,8 @@ function ipyvim {
   fi
 }
 
+# ------------------ Great Lakes --------------------------------------
+
 ghu() {
   pullpush $1
   git submodule foreach --recursive pullpush $1
@@ -122,11 +124,12 @@ gldown() {
   scp -r kellenkk@greatlakes-xfer.arc-ts.umich.edu:"$1" "$2"
 }
 
+# ------------------ TPU --------------------------------------
+
 createbucket() {
   gcloud storage buckets create "gs://$BUCKET_NAME" \
       --location=US
 }
-
 
 _tpu_ip() {
   gcloud compute tpus tpu-vm describe "$TPU_NAME" --zone="$ZONE" \
@@ -173,6 +176,9 @@ tpudel() {
     --zone="$ZONE"
 }
 
+
+# ------------------ Tailscale --------------------------------------
+
 pcup(){
   scp -r "$1" kellen@kellen-pc.tail82ceca.ts.net:"$2"
 }
@@ -181,21 +187,50 @@ pcdown(){
   scp -r kellen@kellen-pc.tail82ceca.ts.net:"$1" "$2"
 }
 
-yingup(){
-  scp -r "$1" kellenkk@141.212.113.220:"$2"
+
+# ------------------ Ying compute --------------------------------------
+
+_ying_host() {
+  case "${1:-1}" in
+    2) echo "ying-compute2.eecs.umich.edu" ;;
+    *) echo "ying-compute" ;;
+  esac
 }
 
-yingdown(){
+yingc() {
+  # Usage: yingc        (server 1)
+  #        yingc 2      (server 2)
+  ssh "kellenkk@$(_ying_host "$1")"
+}
+
+yingup() {
+  # Usage: yingup <local> <remote>       (server 1)
+  #        yingup 2 <local> <remote>     (server 2)
+  local host_arg=""
+  if [ "$1" = "1" ] || [ "$1" = "2" ]; then
+    host_arg="$1"; shift
+  fi
+  scp -r "$1" "kellenkk@$(_ying_host "$host_arg"):$2"
+}
+
+yingdown() {
+  # Usage: yingdown <user_dir>                         (uses $SERVER_OUTPUT_DIR, server 1)
+  #        yingdown <server_dir> <user_dir>            (server 1)
+  #        yingdown 2 <user_dir>                       (uses $SERVER_OUTPUT_DIR, server 2)
+  #        yingdown 2 <server_dir> <user_dir>          (server 2)
+  local host_arg=""
+  if [ "$1" = "1" ] || [ "$1" = "2" ]; then
+    host_arg="$1"; shift
+  fi
   local server_dir user_dir
   if [ "$#" -eq 1 ]; then
-      server_dir=$SERVER_OUTPUT_DIR
-      user_dir="$1"
+    server_dir=$SERVER_OUTPUT_DIR
+    user_dir="$1"
   else
-      server_dir="${1:-$SERVER_OUTPUT_DIR}"
-      user_dir="$2"
+    server_dir="${1:-$SERVER_OUTPUT_DIR}"
+    user_dir="$2"
   fi
-
-  scp -rp kellenkk@141.212.113.220:"$server_dir" "$user_dir"
+  scp -rp "kellenkk@$(_ying_host "$host_arg"):$server_dir" "$user_dir"
 }
 
 #----------------------- set status bar ----------------------------

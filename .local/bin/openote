@@ -21,4 +21,11 @@ SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Open Note:")
 SOURCEPATH="${PATHS[$SELECTED]}"
 SLUG=$(basename "$SOURCEPATH" .tree)
 
+if ! tmux has-session -t forest 2>/dev/null; then
+  "$FORESTDIR/scripts/fserve"
+  until curl -s -o /dev/null "http://localhost:1234/$SLUG/index.html"; do
+    sleep 0.2
+  done
+fi
+
 firefox --new-window "http://localhost:1234/$SLUG/index.html"

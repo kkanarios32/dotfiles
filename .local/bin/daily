@@ -60,6 +60,55 @@ print(result.rstrip())
 PY
 )"
 
+  research_root="${FORESTDIR}/trees/research"
+  research_transcludes=""
+  research_files_to_add=()
+
+  if [ ! -e "${file}" ] && [ -d "${research_root}" ]; then
+    while IFS= read -r notebook_name; do
+      [[ -z "$notebook_name" ]] && continue
+      notebook_dir="${research_root}/${notebook_name}"
+      notebook_index="${notebook_dir}/${notebook_name}.tree"
+      [ ! -e "${notebook_index}" ] && continue
+
+      date_slug=$(datefile)
+      daily_filename="${notebook_name}-${date_slug}"
+      daily_file="${notebook_dir}/${daily_filename}.tree"
+
+      if [ ! -e "${daily_file}" ]; then
+        cat > "${daily_file}" <<NBDAILYEOF
+\\import{base-macros}
+\\author{kellenkanarios}
+\\meta{author}{false}
+\\tag{private}
+\\title{[${notebook_name}](${notebook_name}) - $(now)}
+\\date{${datetag}}
+
+\\p{\\strong{Did today:}}
+\\ul{
+
+}
+\\p{\\strong{Stopped at:}}
+\\ul{
+
+}
+\\p{\\strong{Next step:}}
+\\ul{
+
+}
+\\p{\\strong{Open Questions:}}
+\\ul{
+
+}
+NBDAILYEOF
+        echo "\\transclude{${daily_filename}}" >> "${notebook_index}"
+        research_files_to_add+=("${daily_file}" "${notebook_index}")
+      fi
+
+      research_transcludes+="\\transclude{${daily_filename}}"$'\n'
+    done < <(find "${research_root}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
+  fi
+
   if [ ! -e "${file}" ]; then
       quote="$(python3 - <<PY
 import json
@@ -118,9 +167,8 @@ ${quote}
 ${carried_todos}
 }
 
-\\section{Progress on Todos}{
-
-}
+\\section{Research}{
+${research_transcludes}}
 
 \\section{Tomorrow's Todos}{
 
@@ -141,6 +189,9 @@ DAILYEOF
 
   cd "${dir}" || exit 1
   git add "${file}"
+  if [ ${#research_files_to_add[@]} -gt 0 ]; then
+    git add "${research_files_to_add[@]}"
+  fi
   git commit
   git push
 }

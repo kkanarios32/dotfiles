@@ -1,26 +1,105 @@
 #!/bin/bash
 
-_create() {
-  cd "$FORESTDIR"
+_create_fleet() {
+  local title="$1"
+  local dir="${FORESTDIR}/trees/fleet"
+  mkdir -p "${dir}"
+
+  local index="${dir}/fleet.tree"
+  if [ ! -e "${index}" ]; then
+    cat > "${index}" <<INDEXEOF
+\\import{base-macros}
+\\title{Fleeting notes}
+\\author{kellenkanarios}
+
+INDEXEOF
+  fi
+
+  local filepath
+  filepath=$(opam exec -- forester new --random --dest="${dir}")
+  local id datetag
+  id=$(basename "${filepath}" .tree)
+  datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  cat > "${filepath}" <<FLEETEOF
+\\import{base-macros}
+\\author{kellenkanarios}
+\\meta{author}{false}
+\\tag{private}
+\\title{${title}}
+\\date{${datetag}}
+
+FLEETEOF
+
+  echo "\\transclude{${id}}" >> "${index}"
+  echo "${filepath}"
+}
+
+_create_todo() {
+  local title="$1"
+  local filepath
+  filepath=$(opam exec -- forester new --random --dest="${FORESTDIR}/trees/todo")
+  echo "\\title{${title}}" >> "${filepath}"
+  cat "${FORESTDIR}/templates/todo.tree" >> "${filepath}"
+  echo "${filepath}"
+}
+
+_create_public() {
+  local title="$1"
+  local dir="${FORESTDIR}/trees/public"
+  mkdir -p "${dir}"
+  local filepath
+  filepath=$(opam exec -- forester new --random --dest="${dir}")
+  local datetag
+  datetag=$(date +"%Y-%m-%d")
+
+  cat > "${filepath}" <<PUBEOF
+\\tag{public}
+\\date{${datetag}}
+\\title{${title}}
+\\author{kellenkanarios}
+\\import{base-macros}
+
+PUBEOF
+
+  echo "${filepath}"
+}
+
+_run() {
+  local type="$1"
+  shift
+  local title="$*"
+
+  cd "$FORESTDIR" || exit 1
   eval "$(opam env --switch=forest)"
-  FILENAME=$(opam exec -- forester new --random --dest="$FORESTDIR/trees/todo")
-  TITLE="$*"
 
-  echo "\\title{$TITLE}" >> "$FILENAME"
-  cat "$FORESTDIR/templates/todo.tree" >> "$FILENAME"
-  echo "$FILENAME"
+  local filepath
+  case "$type" in
+    fleet)  filepath=$(_create_fleet "$title") ;;
+    todo)   filepath=$(_create_todo "$title") ;;
+    public) filepath=$(_create_public "$title") ;;
+    *) echo "unknown note type: $type" >&2; exit 1 ;;
+  esac
+
+  if [ "$type" != "todo" ]; then
+    nvim + "$filepath"
+  fi
 }
 
-_edit() {
-  FILENAME=$(_create "$@")
-  nvim "$FILENAME"
-}
+if [[ $# -ge 2 ]]; then
+  _run "$@"
+  exit
+fi
 
-if [[ $# -eq 0 ]]; then
-  TITLE=$(dmenu -i -l 20 -p "Title:" < /dev/null)
-  [[ -z $TITLE ]] && exit 1
-  edit_command="$(declare -f _create; declare -f _edit; echo "_edit \"$TITLE\"")"
-  alacritty -e bash -c "$edit_command"
+TYPE=$(printf '%s\n' fleet todo public | dmenu -i -l 3 -p "Type:")
+[[ -z "$TYPE" ]] && exit 0
+TITLE=$(dmenu -i -l 20 -p "Title:" < /dev/null)
+[[ -z "$TITLE" ]] && exit 0
+
+cmd="$(declare -f _create_fleet _create_todo _create_public _run); _run \"$TYPE\" \"$TITLE\""
+
+if [ "$TYPE" = "todo" ]; then
+  bash -c "$cmd"
 else
-  _edit "$@"
+  alacritty -e bash -l -c "$cmd"
 fi

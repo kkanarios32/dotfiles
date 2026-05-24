@@ -191,14 +191,49 @@ def cmd_done():
         return
     content_map = dict(pending)
     for tid in selected:
-        r = subprocess.run(["todoist", "c", tid], capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.stderr.write(f"  ! todoist failed for {content_map[tid]}: {r.stderr.strip()}\n")
-            continue
-        if mark_done_in_file(tid):
-            print(f"  ✓ {content_map[tid]}")
-        else:
-            sys.stderr.write(f"  ! could not update local file for {content_map[tid]}\n")
+        complete_task(tid, content_map[tid])
+
+
+def dmenu(items, prompt):
+    """items: list of (display, key). Returns the selected key, or None."""
+    args = ["dmenu", "-i", "-l", "20", "-p", prompt]
+    display_to_key = {disp: key for disp, key in items}
+    input_data = "\n".join(disp for disp, _ in items)
+    try:
+        result = subprocess.run(args, input=input_data, capture_output=True, text=True)
+    except FileNotFoundError:
+        sys.stderr.write("dmenu not installed.\n")
+        sys.exit(1)
+    if result.returncode != 0:
+        return None
+    choice = result.stdout.strip()
+    return display_to_key.get(choice)
+
+
+def complete_task(tid, content):
+    r = subprocess.run(["todoist", "c", tid], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.stderr.write(f"  ! todoist failed for {content}: {r.stderr.strip()}\n")
+        return
+    if mark_done_in_file(tid):
+        print(f"  ✓ {content}")
+    else:
+        sys.stderr.write(f"  ! could not update local file for {content}\n")
+
+
+def cmd_dmenu():
+    require_file()
+    pending = [(tid, content)
+               for kind, tid, content in parse_tasks(FILE.read_text(encoding="utf-8"))
+               if kind == "tdtask"]
+    if not pending:
+        return
+    items = [(content, tid) for tid, content in pending]
+    tid = dmenu(items, "Complete:")
+    if not tid:
+        return
+    content_map = dict(pending)
+    complete_task(tid, content_map[tid])
 
 
 USAGE = """tdd — todoist daily todo manager
@@ -209,6 +244,7 @@ USAGE:
   tdd add -t           same, but queue under Tomorrow's Todos
                        (daily will carry them into the next day's list)
   tdd done             fuzzy-pick pending tasks to mark done (syncs to todoist)
+  tdd dmenu            pick a pending task in dmenu to mark done (syncs to todoist)
   tdd help             show this help"""
 
 
@@ -223,6 +259,8 @@ def main():
         cmd_add(tomorrow=tomorrow)
     elif cmd == "done":
         cmd_done()
+    elif cmd == "dmenu":
+        cmd_dmenu()
     elif cmd in ("help", "-h", "--help"):
         print(USAGE)
     else:

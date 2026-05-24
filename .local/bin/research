@@ -36,7 +36,20 @@ NOTEBOOKEOF
 \\title{[${notebook_name}](${notebook_name}) - $(now)}
 \\date{${datetag}}
 
-\\section{Notes}{
+\\p{\\strong{Did today:}}
+\\ul{
+
+}
+\\p{\\strong{Stopped at:}}
+\\ul{
+
+}
+\\p{\\strong{Next step:}}
+\\ul{
+
+}
+\\p{\\strong{Open Questions:}}
+\\ul{
 
 }
 DAILYEOF
