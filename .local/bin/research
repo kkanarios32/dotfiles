@@ -24,8 +24,7 @@ NOTEBOOKEOF
     nvim + "${notebook_index}"
   else
     date_slug=$(datefile)
-    daily_filename="${notebook_name}-${date_slug}"
-    daily_file="${notebook_dir}/${daily_filename}.tree"
+    daily_file="${notebook_dir}/${notebook_name}-${date_slug}.tree"
 
     if [ ! -e "${daily_file}" ]; then
       cat > "${daily_file}" <<DAILYEOF
@@ -33,7 +32,7 @@ NOTEBOOKEOF
 \\author{kellenkanarios}
 \\meta{author}{false}
 \\tag{private}
-\\title{[${notebook_name}](${notebook_name}) - $(now)}
+\\title{[${notebook_name}](${notebook_name}) - [${date_slug}](${date_slug})}
 \\date{${datetag}}
 
 \\p{\\strong{Did today:}}
@@ -53,11 +52,8 @@ NOTEBOOKEOF
 
 }
 DAILYEOF
-      echo "\\transclude{${daily_filename}}" >> "${notebook_index}"
-      nvim +10 "${daily_file}"
-    else
-      nvim + "${daily_file}"
     fi
+    nvim + "${daily_file}"
   fi
 
   read -p 'Do you want to commit? ' commit

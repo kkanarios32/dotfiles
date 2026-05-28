@@ -166,6 +166,12 @@ tpustart() {
     --zone="$ZONE"
 }
 
+# Automated daily lifecycle — see ~/.local/bin/tpuwatch (cron runs `tpuwatch run`
+# at 6am: starts the TPU retrying until capacity frees up, prompts every 2h, and
+# hard-stops at 11pm). Config: ~/.config/tpuwatch.env.
+tpuextend() { tpuwatch extend "$@"; }   # pause the no-response auto-stop, e.g. `tpuextend 4h`
+tpustatus() { tpuwatch status; }
+
 sshtpu() {
   gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$ZONE" -- -L 6006:localhost:6006
 }
