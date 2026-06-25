@@ -16,6 +16,8 @@ alias dots='cd $DOTFILES'
 alias cdf='cd $FORESTDIR'
 alias scripts='cd $DOTFILES/.local/bin'
 alias today="gcalcli agenda '$(date +%Y-%m-%d)' '$(date -d tomorrow +%Y-%m-%d)' --military --nodeclined"
+alias wn='watch -n 1 nvidia-smi'
+alias wnm='nvidia-smi --query-gpu=timestamp,utilization.memory,memory.used --format=csv -l 1'
 
 
 # enable color support of ls and also add handy aliases

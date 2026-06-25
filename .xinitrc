@@ -16,18 +16,26 @@ export PATH="$(find -L $HOME/.local/bin/ -type d -print | paste -sd: -):$PATH"
 
 export PATH
 
+[ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources"
+
+# Apply the autorandr profile matching the currently-connected monitors
+# (falls back to 'ultrawide' if none matches). Run before feh/dwm so the
+# wallpaper and bar come up at the correct resolution.
+autorandr --change --default ultrawide
+
+# Wallpaper is chosen from the active autorandr profile (see ~/.local/bin/set-wallpaper).
+set-wallpaper &
+
 dwmblocks &
 dunst &
 pomo notify &
 
 if [[ "$(hostname)" == "kellen-laptop" ]]; then
-  feh --bg-fill $HOME/Pictures/nord-gojo.png
   setxkbmap -option ctrl:nocaps
   nm-applet --indicator &
   blueman-applet &
 else
   arbtt-capture &
-  feh --bg-fill $HOME/Pictures/nord-gojo.png $HOME/Pictures/nord-zoro.png $HOME/Pictures/nord-ichigo.png &
 fi
 
 exec dwm

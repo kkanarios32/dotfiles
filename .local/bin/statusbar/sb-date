@@ -1,4 +1,4 @@
 #!/usr/bin/zsh
 
 date=$(date +'%m-%d')
-echo "^c#B48EAD^ $date^c#FFFFFF^"
+sb-pill "#2E3440" "#E5E9F0" "^c#88C0D0^󰃭^c#E5E9F0^ $date"

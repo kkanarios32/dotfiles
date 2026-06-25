@@ -1,0 +1,21 @@
+#!/usr/bin/bash
+# Set the wallpaper based on the active autorandr monitor profile.
+# Single source of truth: called from ~/.xinitrc (login) and from the
+# autorandr postswitch hook (monitor hotplug).
+
+export DISPLAY="${DISPLAY:-:0}"
+pics="$HOME/Pictures"
+
+# In a postswitch hook autorandr exports the name; otherwise query it.
+profile="${AUTORANDR_CURRENT_PROFILE:-$(autorandr --current 2>/dev/null | head -n1)}"
+
+case "$profile" in
+  ultrawide)
+    feh --bg-fill "$pics/ultrawide.jpg"
+    ;;
+  *)
+    # No matching profile (laptop, or an unsaved layout): one image per
+    # monitor, left-to-right. feh ignores extra images beyond the monitor count.
+    feh --bg-fill "$pics/nord-gojo.png" "$pics/nord-zoro.png" "$pics/nord-ichigo.png"
+    ;;
+esac

@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+# Runs after autorandr applies any profile (e.g. on monitor hotplug).
+# Re-set the wallpaper to match the now-active profile.
+exec "$HOME/.local/bin/set-wallpaper"

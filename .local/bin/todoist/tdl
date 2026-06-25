@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""tdl — log today's completed todoist tasks into the forester daily tree.
+
+Pulls today's completed tasks from Todoist (`todoist completed-list`), groups
+them by top-level project, and writes a `\\section{Completed}{...}` block into
+today's daily tree at $FORESTDIR/trees/daily/YYYY-MM-DD.tree. Re-running it
+refreshes that section in place (idempotent), so it's safe to call repeatedly
+(e.g. at the end of the day, or after each `tdd next`).
+"""
+
+import csv
+import io
+import json
+import os
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+FOREST_DIR = Path(os.environ.get("FORESTDIR", os.path.expanduser("~/Projects/forest")))
+TODAY = date.today()
+FILE = FOREST_DIR / "trees" / "daily" / f"{TODAY.isoformat()}.tree"
+CACHE_FILE = Path(os.path.expanduser("~/.cache/todoist/cache.json"))
+SECTION = r"\section{Completed}{"
+
+
+def completed_today():
+    """Today's completed tasks as [{project, content}, ...]."""
+    r = subprocess.run(["todoist", "--csv", "completed-list"],
+                       capture_output=True, text=True)
+    stamp = TODAY.strftime("%y/%m/%d")  # completed dates look like 26/06/25(Thu) 11:43
+    tasks = []
+    for row in csv.reader(io.StringIO(r.stdout)):
+        if len(row) < 4:
+            continue
+        _tid, when, proj, content = row[:4]
+        if when.startswith(stamp):
+            tasks.append({"project": proj, "content": content})
+    return tasks
+
+
+def project_roots():
+    """Map project name -> top-level (root ancestor) project name, from cache."""
+    if not CACHE_FILE.exists():
+        return {}
+    cache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+    by_id = {p["id"]: p for p in cache.get("projects", [])}
+    by_name = {p["name"]: p for p in cache.get("projects", [])}
+
+    def root(name):
+        p = by_name.get(name) or by_name.get(name.split("/")[0])
+        while p and p.get("parent_id") and by_id.get(p["parent_id"]):
+            p = by_id[p["parent_id"]]
+        return p["name"] if p else name
+
+    return {p["name"]: root(p["name"]) for p in cache.get("projects", [])}
+
+
+def group_completed(tasks):
+    """Group completed tasks by top-level project: [(root, [task, ...]), ...]."""
+    roots = project_roots()
+    groups = {}
+    for t in tasks:
+        name = t["project"].lstrip("#")
+        root = roots.get(name) or roots.get(name.split("/")[0]) or name
+        groups.setdefault(root, []).append(t)
+    return sorted(groups.items())
+
+
+def render_section(groups):
+    lines = [SECTION]
+    for root, ts in groups:
+        lines.append(f"\\p{{\\strong{{{root}}}}}")
+        lines.append("\\ul{")
+        for t in ts:
+            lines.append(f"  \\tdtaskx{{}}{{{t['content']}}}")
+        lines.append("}")
+    lines.append("}")
+    return "\n".join(lines)
+
+
+def find_section_bounds(text):
+    """(start, end) covering an existing \\section{Completed}{...}, or None."""
+    start = text.find(SECTION)
+    if start == -1:
+        return None
+    i = start + len(SECTION)
+    depth = 1
+    while i < len(text) and depth > 0:
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return start, i + 1
+        i += 1
+    return start, len(text)
+
+
+def main():
+    if not FILE.exists():
+        sys.stderr.write(f"Today's daily tree doesn't exist yet: {FILE}\n")
+        sys.stderr.write("Run `daily` first to bootstrap it.\n")
+        sys.exit(1)
+
+    tasks = completed_today()
+    if not tasks:
+        print("No tasks completed today.")
+        return
+
+    groups = group_completed(tasks)
+    section = render_section(groups)
+
+    text = FILE.read_text(encoding="utf-8")
+    bounds = find_section_bounds(text)
+    if bounds:
+        new_text = text[:bounds[0]] + section + text[bounds[1]:]
+    else:
+        new_text = text.rstrip() + "\n\n" + section + "\n"
+    FILE.write_text(new_text, encoding="utf-8")
+
+    total = sum(len(ts) for _, ts in groups)
+    print(f"Logged {total} completed task(s) across {len(groups)} project(s) to {FILE.name}")
+
+
+if __name__ == "__main__":
+    main()

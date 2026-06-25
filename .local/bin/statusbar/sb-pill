@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+# sb-pill <bg> <fg> <text...>
+# Wrap text in a rounded Nord status2d "pill" for dwmblocks.
+#
+# Rounded ends use the powerline semicircle glyphs  (U+E0B6) and  (U+E0B4),
+# drawn in the pill colour over the bar background so they read as round caps.
+# The "floating" (shorter-than-bar) look comes from the statuspillpad inset
+# patched into dwm.c — the pill body height is set there, not here.
+#
+# BARBG must match SchemeNorm bg (col_normbg) in the dwm config.h.
+
+BARBG="#434C5E"
+LCAP=$''
+RCAP=$''
+
+bg="$1"
+fg="$2"
+shift 2
+text="$*"
+
+printf '^c%s^^b%s^%s^c%s^^b%s^ %s ^c%s^^b%s^%s^d^' \
+    "$bg" "$BARBG" "$LCAP" \
+    "$fg" "$bg" "$text" \
+    "$bg" "$BARBG" "$RCAP"

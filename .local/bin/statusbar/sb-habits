@@ -1,0 +1,175 @@
+#!/usr/bin/bash
+# sb-habits — dwmblocks block showing today's outstanding Habitify habits.
+#
+#   Display (run by dwmblocks):   pill with a count of habits still to do today,
+#                                 or a green check when everything is done.
+#   Left-click ($BUTTON=1):       dmenu of outstanding habits; the chosen one is
+#                                 logged to its goal (marking it complete) via the
+#                                 Habitify REST API, then the block is refreshed.
+#
+# Uses the Habitify v2 REST API (X-API-Key auth). Get a key in the app under
+# Settings -> API. Store it, one line, in $HABITIFY_API_KEY or the file below
+# (chmod 600).
+
+API="https://api.habitify.me/v2"
+KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/habitify/apikey"
+CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/sb-habits.json"
+SIGNAL=9   # must match the signal in dwmblocks config.h X("", "sb-habits", _, 9)
+
+# Nord palette (matches the other sb-* scripts / sb-pill).
+PILL_BG="#2E3440"
+PILL_FG="#E5E9F0"
+C_PENDING="#EBCB8B"  # yellow  — habits remain
+C_DONE="#A3BE8C"     # green   — all done
+C_ERR="#BF616A"      # red     — misconfigured / API error
+
+# Material Design Icons (the bar's icon font), matching the other sb-* blocks.
+ICON_PENDING="󰝘"     # md-format-list-checks
+ICON_DONE="󰗠"        # md-check-circle
+ICON_ERR="󰀨"         # md-alert-circle
+ICON_NOKEY="󱚃"       # md-key-alert
+
+today() { date +%Y-%m-%d; }
+
+get_key() {
+    if [ -n "$HABITIFY_API_KEY" ]; then
+        printf '%s' "$HABITIFY_API_KEY"
+    elif [ -r "$KEY_FILE" ]; then
+        head -n1 "$KEY_FILE" | tr -d '[:space:]'
+    fi
+}
+
+# Echo today's journal JSON, or nothing on failure.
+fetch_journal() {
+    local key="$1"
+    curl -fsG --max-time 8 --retry 2 --retry-delay 1 --retry-connrefused \
+        "$API/habits/journal" \
+        --data-urlencode "date=$(today)" \
+        -H "X-API-Key: $key" 2>/dev/null
+}
+
+# Echo today's journal, refreshing the cache on success and falling back to the
+# last cached copy on failure. The block only refreshes every 900s, so without
+# this a single transient network blip would leave the error icon stuck on the
+# bar until the next tick.
+get_journal() {
+    local key="$1" j
+    j="$(fetch_journal "$key")"
+    if [ -n "$j" ]; then
+        mkdir -p "$(dirname "$CACHE_FILE")" 2>/dev/null
+        printf '%s' "$j" > "$CACHE_FILE"
+        printf '%s' "$j"
+    elif [ -r "$CACHE_FILE" ]; then
+        cat "$CACHE_FILE"
+    fi
+}
+
+# From journal JSON on stdin, emit outstanding habits as
+#   id <TAB> name <TAB> unitSymbol <TAB> remaining
+# Outstanding = status is not completed / skipped / failed.
+outstanding() {
+    jq -r '
+        .data[]
+        | (.status // "" | ascii_downcase) as $s
+        | select(($s | test("complet|skip|fail")) | not)
+        | (.progress // {}) as $p
+        | (($p.target // 1) - ($p.current // 0)) as $rem
+        | [ .id, .name, ($p.unit // "rep"), (if $rem > 0 then $rem else ($p.target // 1) end) ]
+        | @tsv
+    ' 2>/dev/null
+}
+
+# From journal JSON on stdin, emit completed habits (one name per line),
+# shown dimmed and inert in the picker.
+completed() {
+    jq -r '
+        .data[]
+        | (.status // "" | ascii_downcase) as $s
+        | select($s | test("complet"))
+        | .name
+    ' 2>/dev/null
+}
+
+# Log progress toward a habit's goal (completing it). Args: key id unit value
+log_habit() {
+    local key="$1" id="$2" unit="$3" value="$4"
+    curl -fs --max-time 8 -X POST "$API/habits/$id/logs" \
+        -H "X-API-Key: $key" \
+        -H "Content-Type: application/json" \
+        -d "{\"unitSymbol\":\"$unit\",\"value\":$value,\"targetDate\":\"$(today)\"}" \
+        >/dev/null 2>&1
+}
+
+refresh() { kill -s "RTMIN+$SIGNAL" "$(pidof dwmblocks)" 2>/dev/null; }
+
+dmenu_opts() { echo "-i -c -l 12 -h 32"; }
+
+KEY="$(get_key)"
+
+# ---- Left-click: pick an outstanding habit and complete it -------------------
+if [ "$BUTTON" = "1" ]; then
+    if [ -z "$KEY" ]; then
+        printf 'No Habitify API key. Put it in %s' "$KEY_FILE" | dmenu $(dmenu_opts) -p "habits:"
+        exit 0
+    fi
+    journal="$(get_journal "$KEY")"
+    list="$(printf '%s' "$journal" | outstanding)"
+    donelist="$(printf '%s' "$journal" | completed)"
+    if [ -z "$list" ] && [ -z "$donelist" ]; then
+        printf 'No habits for today' | dmenu $(dmenu_opts) -p "habits:"
+        exit 0
+    fi
+    # Build a decorated menu and map each pending line back to its habit
+    # id/unit/value so the selection can be logged. The amount is shown only
+    # when it carries information (target > 1), so binary habits stay clean.
+    # Completed habits are appended dimmed (\x01) and inert (absent from H_ID).
+    declare -A H_ID H_UNIT H_VAL
+    menu=""
+    while IFS=$'\t' read -r id name unit value; do
+        [ -z "$id" ] && continue
+        case "$value" in
+            ''|1|1.0) line="  ○  $name" ;;
+            *)        line="  ○  $name  (${value%.0} $unit)" ;;
+        esac
+        H_ID["$line"]="$id"
+        H_UNIT["$line"]="$unit"
+        H_VAL["$line"]="$value"
+        menu+="$line"$'\n'
+    done <<< "$list"
+    while IFS= read -r name; do
+        [ -z "$name" ] && continue
+        menu+=$'\x01'"  ✓  $name"$'\n'
+    done <<< "$donelist"
+    n="$(printf '%s\n' "$list" | grep -c .)"
+    choice="$(printf '%s' "$menu" | dmenu $(dmenu_opts) -p "Habits  $n left ")" || exit 0
+    [ -z "$choice" ] && exit 0
+    id="${H_ID[$choice]}"
+    [ -z "$id" ] && exit 0
+    unit="${H_UNIT[$choice]}"
+    value="${H_VAL[$choice]}"
+    if log_habit "$KEY" "$id" "$unit" "$value"; then
+        refresh
+    else
+        printf 'Failed to complete: %s' "$choice" | dmenu $(dmenu_opts) -p "habits:"
+    fi
+    exit 0
+fi
+
+# ---- Display ----------------------------------------------------------------
+if [ -z "$KEY" ]; then
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_ERR^$ICON_NOKEY^c$PILL_FG^"
+    exit 0
+fi
+
+journal="$(get_journal "$KEY")"
+if [ -z "$journal" ]; then
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_ERR^$ICON_ERR^c$PILL_FG^"
+    exit 0
+fi
+
+count="$(printf '%s' "$journal" | outstanding | grep -c .)"
+if [ "$count" -gt 0 ]; then
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_PENDING^$ICON_PENDING^c$PILL_FG^ $count Habits left"
+else
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_DONE^$ICON_DONE^c$PILL_FG^"
+fi

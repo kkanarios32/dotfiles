@@ -1,0 +1,3 @@
+! Pin DPI so Xft (dwm/dmenu/etc.) ignores the bogus EDID screen size.
+! DP-2 ultrawide reports ~264 DPI to the X core protocol; real value is ~96.
+Xft.dpi: 96

@@ -17,23 +17,31 @@ static const int showsystray = 1; /* 0 means no systray */
 static const int showbar = 1;     /* 0 means no bar */
 static const int topbar = 1;      /* 0 means bottom bar */
 static const int user_bh = 10;
+/* vertical inset (px) of status-bar "pills" from the top/bottom bar edges;
+   makes status backgrounds shorter than the bar so they look like floating
+   chips. Consumed by the status rendering in dwm.c. */
+static const int statuspillpad = 4;
 static const char *fonts[] = {
     // "CaskaydiaCove Nerd Font Propo SemiBold:size=15",
     // "JetBrains Mono SemiBold:size=16",
-    "Designio Bold:size=16",
+    "Iosevka Aile:size=15",
     "Material Design Icons Desktop:size=16",
+    /* fallback for powerline round caps () used by sb-pill */
+    "CaskaydiaCove Nerd Font:size=16",
 };
-static const char dmenufont[] = "Facebook Sans:size=14";
+static const char dmenufont[] = "Iosevka Aile:size=17";
 static const char col_normfg[] = "#D8DEE9";
 static const char col_normbg[] = "#434C5E";
 static const char col_selbo[] = "#88C0D0";
-static const char col_selfg[] = "#A3BE8C";
-static const char col_selbg[] = "#2E3440";
+static const char col_selfg[] = "#88C0D0";  /* active tag: cyan accent, matches status chip icons */
+static const char col_selbg[] = "#2E3440";  /* dark chip background, matches status pills */
+static const char col_titlefg[] = "#E5E9F0"; /* window title: soft off-white, matches chip text */
 
 static const char *colors[][3] = {
-    /*               fg         bg         border   */
-    [SchemeNorm] = {col_normfg, col_normbg, col_normbg},
-    [SchemeSel] = {col_selfg, col_selbg, col_selbo},
+    /*                fg          bg         border   */
+    [SchemeNorm]  = {col_normfg,  col_normbg, col_normbg},
+    [SchemeSel]   = {col_selfg,   col_selbg,  col_selbo},
+    [SchemeTitle] = {col_titlefg, col_selbg,  col_selbo},
 };
 
 /* tagging */
@@ -64,6 +72,7 @@ static const Layout layouts[] = {
     {"[]=", tile}, /* first entry is default */
     {"><>", NULL}, /* no layout function means floating behavior */
     {"[M]", monocle},
+    {"[][]=", tilewide},
 };
 
 /* key definitions */
@@ -99,7 +108,8 @@ static const char *voldowncmd[] = {"set-volume", "down", NULL};
 
 static const char *openotecmd[] = {"openote", NULL};
 static const char *mknotecmd[] = {"mknote", NULL};
-static const char *tddcmd[] = {"tdd", "dmenu", NULL};
+static const char *tddcmd[] = {"tdd", "next", NULL};
+static const char *tdblcmd[] = {"tdd", "backlog", NULL};
 
 static const char *brupcmd[] = {"brightnessctl", "set", "10%+", NULL};
 static const char *brdowncmd[] = {"brightnessctl", "set", "10%-", NULL};
@@ -107,6 +117,8 @@ static const char *brdowncmd[] = {"brightnessctl", "set", "10%-", NULL};
 static const StatusCmd statuscmds[] = {
     {"sb-network", 1},
     {"sb-bluetooth", 2},
+    {"sb-todo", 7},
+    {"sb-habits", 9},
 };
 
 static const char *statuscmd[] = {"/bin/sh", "-c", NULL, NULL};
@@ -125,6 +137,7 @@ static const Key keys[] = {
     {MODKEY, XK_n, spawn, {.v = openotecmd}},
     {MODKEY | ShiftMask, XK_n, spawn, {.v = mknotecmd}},
     {MODKEY | ShiftMask, XK_t, spawn, {.v = tddcmd}},
+    {MODKEY | ShiftMask, XK_b, spawn, {.v = tdblcmd}},
     {MODKEY, XK_s, spawn, {.v = screenshotcmd}},
     {MODKEY, XK_q, spawn, {.v = browsercmd}},
     {MODKEY, XK_z, spawn, {.v = pdfcmd}},
@@ -141,6 +154,7 @@ static const Key keys[] = {
     {MODKEY, XK_t, setlayout, {.v = &layouts[0]}},
     {MODKEY, XK_f, setlayout, {.v = &layouts[1]}},
     {MODKEY, XK_m, setlayout, {.v = &layouts[2]}},
+    {MODKEY, XK_w, setlayout, {.v = &layouts[3]}},
     {MODKEY, XK_space, setlayout, {0}},
     {MODKEY | ShiftMask, XK_space, togglefloating, {0}},
     {MODKEY, XK_0, view, {.ui = ~0}},

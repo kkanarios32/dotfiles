@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+# Pomodoro timer wrapped in a Nord pill (pomo supplies its own icon).
+
+out=$(pomo clock 2>/dev/null)
+[ -z "$out" ] && exit 0
+# Idle state shows "--:--" with no running timer — hide the pill entirely.
+case "$out" in *--:--*) exit 0 ;; esac
+
+sb-pill "#2E3440" "#E5E9F0" "^c#88C0D0^$out^c#E5E9F0^"

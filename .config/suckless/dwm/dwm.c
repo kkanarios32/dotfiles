@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -71,7 +72,7 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeTitle }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -241,6 +242,7 @@ static Monitor *systraytomon(Monitor *m);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
+static void tilewide(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void toggletag(const Arg *arg);
@@ -898,7 +900,7 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 
 			text[i] = '\0';
 			w = TEXTW(text) - lrpad;
-			drw_text(drw, x, 0, w, bh, 0, text, 0);
+			drw_text(drw, x, statuspillpad, w, bh - 2 * statuspillpad, 0, text, 0);
 
 			x += w;
 
@@ -942,7 +944,7 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 
 	if (!isCode) {
 		w = TEXTW(text) - lrpad;
-		drw_text(drw, x, 0, w, bh, 0, text, 0);
+		drw_text(drw, x, statuspillpad, w, bh - 2 * statuspillpad, 0, text, 0);
 	}
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
@@ -951,12 +953,24 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 	return ret;
 }
 
+/* Whole days elapsed since the start date (local midnight). */
+static int
+daysinthedarkness(void)
+{
+	struct tm start = {0};
+	start.tm_year = 2026 - 1900; /* start: 2026-06-16 */
+	start.tm_mon = 6 - 1;
+	start.tm_mday = 16;
+	start.tm_isdst = -1;
+	time_t t0 = mktime(&start);
+	double secs = difftime(time(NULL), t0);
+	return secs > 0 ? (int)(secs / 86400) : 0;
+}
+
 void
 drawbar(Monitor *m)
 {
 	int x, w, tw = 0, stw = 0;
-	int boxs = drw->fonts->h / 9;
-	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
 
@@ -992,15 +1006,38 @@ drawbar(Monitor *m)
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
 	if ((w = m->ww - tw - stw - x) > bh) {
-		if (m->sel) {
-			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
-			if (m->sel->isfloating)
-				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
-		} else {
-			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x, 0, w, bh, 1, 1);
-		}
+		/* draw the title as a centered rounded "pill", matching the
+		 * status chips: powerline caps in the chip colour over the bar
+		 * background, body inset vertically by statuspillpad. */
+		char title[64];
+		const char *lcap = "\xee\x82\xb6"; /*  U+E0B6 */
+		const char *rcap = "\xee\x82\xb4"; /*  U+E0B4 */
+		int capw, titlew, pillw, px, ph = bh - 2 * statuspillpad;
+
+		snprintf(title, sizeof title, " Days in the Darkness: %d ", daysinthedarkness());
+
+		/* clear the title region with the plain bar background */
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_rect(drw, x, 0, w, bh, 1, 1);
+
+		drw_setscheme(drw, scheme[SchemeTitle]);
+		capw = TEXTW(lcap) - lrpad;
+		titlew = TEXTW(title) - lrpad;
+		pillw = 2 * capw + titlew;
+		px = (m->ww - pillw) / 2;
+		if (px < x)
+			px = x;
+
+		/* rounded caps: chip colour as fg over the bar bg */
+		drw_setscheme(drw, scheme[LENGTH(colors)]);
+		drw->scheme[ColFg] = scheme[SchemeTitle][ColBg];
+		drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+		drw_text(drw, px, statuspillpad, capw, ph, 0, lcap, 0);
+		drw_text(drw, px + capw + titlew, statuspillpad, capw, ph, 0, rcap, 0);
+
+		/* chip body */
+		drw_setscheme(drw, scheme[SchemeTitle]);
+		drw_text(drw, px + capw, statuspillpad, titlew, ph, 0, title, 0);
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 }
@@ -2074,6 +2111,34 @@ tile(Monitor *m)
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
 			if (my + HEIGHT(c) < m->wh)
 				my += HEIGHT(c);
+		} else {
+			h = (m->wh - ty) / (n - i);
+			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
+			if (ty + HEIGHT(c) < m->wh)
+				ty += HEIGHT(c);
+		}
+}
+
+void
+tilewide(Monitor *m)
+{
+	unsigned int i, n, w, h, mw, mx, ty;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	if (n == 0)
+		return;
+
+	if (n > m->nmaster)
+		mw = m->nmaster ? m->ww * m->mfact : 0;
+	else
+		mw = m->ww;
+	for (i = mx = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+		if (i < m->nmaster) {
+			w = (mw - mx) / (MIN(n, m->nmaster) - i);
+			resize(c, m->wx + mx, m->wy, w - (2*c->bw), (m->wh - ty) - (2*c->bw), 0);
+			if (mx + WIDTH(c) < m->ww)
+				mx += WIDTH(c);
 		} else {
 			h = (m->wh - ty) / (n - i);
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);

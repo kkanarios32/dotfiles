@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 
 time=$(date +'%I:%M %p')
-echo "^c#EBCB8B^ $time^c#FFFFFF^"
+sb-pill "#2E3440" "#E5E9F0" "^c#88C0D0^󰅐^c#E5E9F0^ $time"

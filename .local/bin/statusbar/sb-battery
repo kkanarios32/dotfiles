@@ -51,4 +51,4 @@ case "$(cat "$battery/status" 2>&1)" in
     *) exit 1 ;;
 esac
 
-echo "^c$COLOR^$status$capacity%^c#FFFFFF^"
+sb-pill "#2E3440" "#E5E9F0" "^c$COLOR^$status^c#E5E9F0^$capacity%"

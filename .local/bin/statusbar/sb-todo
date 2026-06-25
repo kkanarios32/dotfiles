@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+# sb-todo — dwmblocks block showing the Todoist "Next" filter.
+#
+#   Display (run by dwmblocks):   pill with "<n> TODOs", or a green check when the
+#                                 Next filter is empty. The count comes from
+#                                 `tdd next count` (the Next saved filter).
+#   Left-click ($BUTTON=1):       dmenu of the Next filter, grouped by top-level
+#                                 project (dimmed project headers); picking a task
+#                                 closes it in Todoist (`tdd next`), then refreshes.
+#
+# Pair this with `tdq`/`tdt` (quick add). Uses sb-pill for the rounded Nord pill.
+
+SIGNAL=7   # must match the signal in dwmblocks config.h X("", "sb-todo", _, 7)
+
+# Nord palette (matches the other sb-* scripts / sb-pill).
+PILL_BG="#2E3440"
+PILL_FG="#E5E9F0"
+C_PENDING="#EBCB8B"  # yellow — tasks remain
+C_DONE="#A3BE8C"     # green  — Next filter empty
+
+# Material Design Icons (the bar's icon font), matching the other sb-* blocks.
+ICON_PENDING="󰝘"     # md-format-list-checks
+ICON_DONE="󰗠"        # md-check-circle
+
+refresh() { kill -s "RTMIN+$SIGNAL" "$(pidof dwmblocks)" 2>/dev/null; }
+
+# ---- Left-click: pick a Next-filter task in dmenu and close it (synced) ------
+if [ "$BUTTON" = "1" ]; then
+    tdd next
+    refresh
+    exit 0
+fi
+
+# ---- Display ----------------------------------------------------------------
+pending=$(tdd next count 2>/dev/null)
+: "${pending:=0}"
+
+if [ "$pending" -gt 0 ]; then
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_PENDING^$ICON_PENDING^c$PILL_FG^ $pending TODOs"
+else
+    sb-pill "$PILL_BG" "$PILL_FG" "^c$C_DONE^$ICON_DONE^c$PILL_FG^"
+fi

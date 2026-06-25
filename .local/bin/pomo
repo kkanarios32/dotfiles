@@ -71,6 +71,9 @@ function pomo_isstopped {
 function pomo_stop {
     # Stop pomo cycles.
     rm -f "$POMO" "${POMO}.worktime"
+    # Refresh the dwmblocks pomo block (signal 8 in dwmblocks config.h) so the
+    # pill disappears immediately instead of on its next interval tick.
+    pkill -RTMIN+8 dwmblocks 2>/dev/null
 }
 
 function pomo_stamp {

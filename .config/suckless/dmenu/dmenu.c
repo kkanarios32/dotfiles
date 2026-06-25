@@ -25,12 +25,14 @@
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
 
 /* enums */
-enum { SchemeNorm, SchemeSel, SchemeOut, SchemeNormHighlight, SchemeSelHighlight, SchemeOutHighlight, SchemeLast }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeOut, SchemeNormHighlight, SchemeSelHighlight, SchemeOutHighlight, SchemeDim, SchemeLast }; /* color schemes */
 
 struct item {
 	char *text;
 	struct item *left, *right;
 	int out;
+	int dim;  /* drawn with SchemeDim; set when the input line is prefixed
+	             with the \001 (SOH) sentinel, which is stripped from text */
 };
 
 static char text[BUFSIZ] = "";
@@ -182,6 +184,8 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeSel]);
 	else if (item->out)
 		drw_setscheme(drw, scheme[SchemeOut]);
+	else if (item->dim)
+		drw_setscheme(drw, scheme[SchemeDim]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
 
@@ -609,7 +613,15 @@ readstdin(void)
 		}
 		if (line[len - 1] == '\n')
 			line[len - 1] = '\0';
-		if (!(items[i].text = strdup(line)))
+		/* a leading \001 (SOH) sentinel marks a dimmed item; strip it so it
+		 * is neither displayed, matched, nor echoed back on selection. */
+		char *ltext = line;
+		items[i].dim = 0;
+		if (*ltext == '\001') {
+			items[i].dim = 1;
+			ltext++;
+		}
+		if (!(items[i].text = strdup(ltext)))
 			die("strdup:");
 
 		items[i].out = 0;
