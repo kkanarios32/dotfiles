@@ -24,7 +24,7 @@ C_DONE="#A3BE8C"     # green   — all done
 C_ERR="#BF616A"      # red     — misconfigured / API error
 
 # Material Design Icons (the bar's icon font), matching the other sb-* blocks.
-ICON_PENDING="󰝘"     # md-format-list-checks
+ICON_PENDING="󰕇"     # md-repeat — recurring habits
 ICON_DONE="󰗠"        # md-check-circle
 ICON_ERR="󰀨"         # md-alert-circle
 ICON_NOKEY="󱚃"       # md-key-alert

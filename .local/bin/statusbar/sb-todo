@@ -19,8 +19,8 @@ C_PENDING="#EBCB8B"  # yellow — tasks remain
 C_DONE="#A3BE8C"     # green  — Next filter empty
 
 # Material Design Icons (the bar's icon font), matching the other sb-* blocks.
-ICON_PENDING="󰝘"     # md-format-list-checks
-ICON_DONE="󰗠"        # md-check-circle
+ICON_PENDING="󰥪"     # md-format-list-checkbox — checklist of boxes
+ICON_DONE="󰛊"        # md-coffee — list clear, take a break
 
 refresh() { kill -s "RTMIN+$SIGNAL" "$(pidof dwmblocks)" 2>/dev/null; }
 
