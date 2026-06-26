@@ -12,6 +12,13 @@
 
 SIGNAL=7   # must match the signal in dwmblocks config.h X("", "sb-todo", _, 7)
 
+# `todoist list` (via `tdd next count`) only ever reads the CLI's local sync
+# cache, so a task added/closed on another device never reaches the bar until
+# something runs `todoist sync`. We do that in the background on each render.
+CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/todoist/cache.json"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/sb-todo.sync.lock"
+SYNC_MAX_AGE=45   # seconds; resync when the local cache is older than this
+
 # Nord palette (matches the other sb-* scripts / sb-pill).
 PILL_BG="#2E3440"
 PILL_FG="#E5E9F0"
@@ -24,6 +31,27 @@ ICON_DONE="󰛊"        # md-coffee — list clear, take a break
 
 refresh() { kill -s "RTMIN+$SIGNAL" "$(pidof dwmblocks)" 2>/dev/null; }
 
+# Seconds since the local cache was last written (huge if it doesn't exist yet).
+cache_age() {
+    local mtime
+    mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null) || { echo 999999; return; }
+    echo $(( $(date +%s) - mtime ))
+}
+
+# Pull remote changes into the local cache in the background, then redraw the
+# block once fresh data has landed. Gated on cache age so the 60s tick and the
+# post-sync redraw don't ping-pong; flock'd so overlapping ticks don't launch
+# parallel syncs. Fully detached (no shared stdout) so dwmblocks isn't held
+# waiting on the child's pipe.
+maybe_sync() {
+    [ "$(cache_age)" -gt "$SYNC_MAX_AGE" ] || return
+    (
+        exec 9>"$LOCK_FILE"
+        flock -n 9 || exit 0
+        todoist sync >/dev/null 2>&1 && refresh
+    ) >/dev/null 2>&1 &
+}
+
 # ---- Left-click: pick a Next-filter task in dmenu and close it (synced) ------
 if [ "$BUTTON" = "1" ]; then
     tdd next
@@ -32,6 +60,7 @@ if [ "$BUTTON" = "1" ]; then
 fi
 
 # ---- Display ----------------------------------------------------------------
+maybe_sync   # kick a background `todoist sync` (+ redraw) if the cache is stale
 pending=$(tdd next count 2>/dev/null)
 : "${pending:=0}"
 

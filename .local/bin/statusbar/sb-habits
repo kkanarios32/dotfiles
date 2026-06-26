@@ -14,7 +14,9 @@
 API="https://api.habitify.me/v2"
 KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/habitify/apikey"
 CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/sb-habits.json"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/sb-habits.sync.lock"
 SIGNAL=9   # must match the signal in dwmblocks config.h X("", "sb-habits", _, 9)
+SYNC_MAX_AGE=120   # seconds; re-fetch the journal when the cache is older
 
 # Nord palette (matches the other sb-* scripts / sb-pill).
 PILL_BG="#2E3440"
@@ -48,10 +50,11 @@ fetch_journal() {
         -H "X-API-Key: $key" 2>/dev/null
 }
 
-# Echo today's journal, refreshing the cache on success and falling back to the
-# last cached copy on failure. The block only refreshes every 900s, so without
-# this a single transient network blip would leave the error icon stuck on the
-# bar until the next tick.
+# Synchronous fetch used on left-click (and as a first-run fallback in the
+# display path): echo today's journal, refreshing the cache on success and
+# falling back to the last cached copy on failure, so a transient network blip
+# doesn't leave a stale error on the bar. The periodic render path uses
+# maybe_refresh() instead, which does this in the background.
 get_journal() {
     local key="$1" j
     j="$(fetch_journal "$key")"
@@ -101,6 +104,36 @@ log_habit() {
 }
 
 refresh() { kill -s "RTMIN+$SIGNAL" "$(pidof dwmblocks)" 2>/dev/null; }
+
+# Today's cached journal, or nothing.
+read_cache() { [ -r "$CACHE_FILE" ] && cat "$CACHE_FILE"; }
+
+# Seconds since the cache was last written (huge if it doesn't exist yet).
+cache_age() {
+    local mtime
+    mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null) || { echo 999999; return; }
+    echo $(( $(date +%s) - mtime ))
+}
+
+# Re-fetch the journal into the cache in the background, then redraw the block
+# when fresh data lands, so the render path never blocks on the network and a
+# habit completed elsewhere shows up without waiting for the next block tick.
+# Gated on cache age (so the redraw doesn't ping-pong) and flock'd (so ticks
+# don't fetch in parallel); fully detached so dwmblocks isn't held on its pipe.
+maybe_refresh() {
+    local key="$1"
+    [ "$(cache_age)" -gt "$SYNC_MAX_AGE" ] || return
+    (
+        exec 9>"$LOCK_FILE"
+        flock -n 9 || exit 0
+        j="$(fetch_journal "$key")"
+        if [ -n "$j" ]; then
+            mkdir -p "$(dirname "$CACHE_FILE")" 2>/dev/null
+            printf '%s' "$j" > "$CACHE_FILE"
+            refresh
+        fi
+    ) >/dev/null 2>&1 &
+}
 
 dmenu_opts() { echo "-i -c -l 12 -h 32"; }
 
@@ -161,7 +194,9 @@ if [ -z "$KEY" ]; then
     exit 0
 fi
 
-journal="$(get_journal "$KEY")"
+maybe_refresh "$KEY"          # background re-fetch (+ redraw) if cache is stale
+journal="$(read_cache)"
+[ -z "$journal" ] && journal="$(get_journal "$KEY")"   # first run: fetch once
 if [ -z "$journal" ]; then
     sb-pill "$PILL_BG" "$PILL_FG" "^c$C_ERR^$ICON_ERR^c$PILL_FG^"
     exit 0
