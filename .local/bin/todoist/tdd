@@ -112,11 +112,19 @@ def promote_to_p1(tid, content):
     return True
 
 
-def cmd_next(count=False):
+def cmd_next(count=False, as_list=False):
     groups = group_tasks(NEXT_FILTER)
     total = sum(len(ts) for _, ts in groups)
     if count:
         print(total)
+        return
+    if as_list:
+        # Machine-readable dump for other tools (e.g. the `daily` note seeds
+        # itself with these): one task per line, tab-separated as
+        # <root-project>\t<content>, in the same grouped order as the dmenu.
+        for root, ts in groups:
+            for t in ts:
+                print(f"{root}\t{t['content']}")
         return
     if not groups:
         return
@@ -161,6 +169,8 @@ USAGE:
   tdd next             dmenu of the Next filter, grouped by top-level project;
                        pick a task to close it (synced to todoist)
   tdd next count       print the number of Next-filter tasks (for sb-todo)
+  tdd next list        print the Next-filter tasks as <project>\t<content>
+                       lines (for the daily note); no dmenu
   tdd backlog          dmenu of the Backlog filter, grouped by top-level
                        project; pick tasks to promote to p1 (into Next)
   tdd backlog count    print the number of Backlog-filter tasks
@@ -172,7 +182,8 @@ def main():
     cmd = args[0] if args else "next"
     rest = args[1:]
     if cmd == "next":
-        cmd_next(count=any(a == "count" for a in rest))
+        cmd_next(count=any(a == "count" for a in rest),
+                 as_list=any(a == "list" for a in rest))
     elif cmd == "backlog":
         cmd_backlog(count=any(a == "count" for a in rest))
     elif cmd in ("help", "-h", "--help"):

@@ -8,55 +8,30 @@ _log() {
   filename=$(datefile "$*")
   file="$dir/${filename}.tree"
   mkdir -p "${dir}"
-  mkdir -p "${FORESTDIR}/data"
-
-  passages_file="${FORESTDIR}/data/meditations_passages.json"
-  read_file="${FORESTDIR}/data/read.json"
 
   datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [ ! -e "${file}" ]; then
-      quote="$(python3 - <<PY
-import json
-import random
-from pathlib import Path
+      # First call of the day: seed the note with today's todos — the same
+      # "Next" filter sb-todo shows (`tdd next`) — pulled fresh from Todoist
+      # and grouped by top-level project as a Forester list.
+      todoist sync >/dev/null 2>&1 || true
+      todos="$(tdd next list 2>/dev/null | awk -F'\t' '
+        function esc(s){ gsub(/\\/,"/",s); gsub(/\{/,"(",s); gsub(/\}/,")",s); return s }
+        { root=esc($1); content=esc($2)
+          if (root != cur) {
+            if (cur != "") print "}"
+            print "\\strong{" root "}"
+            print "\\ul{"
+            cur=root
+          }
+          print "  \\li{" content "}"
+        }
+        END { if (cur != "") print "}" }
+      ')"
+      [ -z "$todos" ] && todos='\p{Nothing queued for today. 🎉}'
 
-passages_file = Path(r"""${passages_file}""")
-read_file = Path(r"""${read_file}""")
-
-if not passages_file.exists():
-    print("Meditations passages file not found.")
-    raise SystemExit(0)
-
-with passages_file.open(encoding="utf-8") as f:
-    passages = json.load(f)
-
-if read_file.exists():
-    with read_file.open(encoding="utf-8") as f:
-        read = set(json.load(f))
-else:
-    read = set()
-
-unread = [p for p in passages if p["id"] not in read]
-
-if not unread:
-    print("You have read all passages.")
-    raise SystemExit(0)
-
-today = random.choice(unread)
-
-text = today["text"].replace("\\\\", "\\\\\\\\")
-print("\\\\iblock{")
-print(f"\\\\strong{{Book {today['book']}, Section {today['section']}}}")
-print(f"\\\\em{{{text}}}")
-print("}")
-
-read.add(today["id"])
-with read_file.open("w", encoding="utf-8") as f:
-    json.dump(sorted(read), f, indent=2)
-PY
-)"
-    cat > "${file}" <<DAILYEOF
+      cat > "${file}" <<DAILYEOF
 \\import{base-macros}
 \\author{kellenkanarios}
 \\meta{author}{false}
@@ -64,17 +39,19 @@ PY
 \\title{$(now)}
 \\date{${datetag}}
 
-\\section{Daily Meditations}{
-${quote}
-\\p{\\strong{Translation:}}
+\\section{Today's todos}{
+${todos}
 }
 DAILYEOF
 
-    echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
-    nvim "${file}"
-  else
-    nvim + "${file}"
+      echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
   fi
+
+  # Every call stamps a fresh timestamped, horizontally-ruled divider so each
+  # sitting is delimited in the day's log.
+  printf '\n\\em{%s}\n\\hr\n' "${datetag}" >> "${file}"
+
+  nvim + "${file}"
 
   read -p 'Do you want to commit? ' commit
 
