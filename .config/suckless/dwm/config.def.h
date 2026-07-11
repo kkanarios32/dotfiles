@@ -108,6 +108,7 @@ static const char *voldowncmd[] = {"set-volume", "down", NULL};
 
 static const char *openotecmd[] = {"openote", NULL};
 static const char *mknotecmd[] = {"mknote", NULL};
+static const char *worknotecmd[] = {"worknote", NULL};
 static const char *tddcmd[] = {"tdd", "next", NULL};
 static const char *tdblcmd[] = {"tdd", "backlog", NULL};
 
@@ -134,6 +135,7 @@ static const Key keys[] = {
     {MODKEY | ShiftMask, XK_Return, spawn, {.v = termcmd}},
     {MODKEY, XK_n, spawn, {.v = openotecmd}},
     {MODKEY | ShiftMask, XK_n, spawn, {.v = mknotecmd}},
+    {MODKEY | ShiftMask, XK_w, spawn, {.v = worknotecmd}},
     {MODKEY | ShiftMask, XK_t, spawn, {.v = tddcmd}},
     {MODKEY | ShiftMask, XK_b, spawn, {.v = tdblcmd}},
     {MODKEY, XK_s, spawn, {.v = screenshotcmd}},

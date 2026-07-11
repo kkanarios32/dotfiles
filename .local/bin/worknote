@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+# worknote — pick a work-in-progress note to promote and open it.
+#
+# The forest inbox (see scripts/inbox / inbox.md) is everything still in the
+# pipeline: concept stubs awaiting a body and literature notes awaiting
+# promotion to a permanent note. This lists exactly those in dmenu and opens
+# the chosen one in nvim.
+#
+# (Replaces the old `todnote`, which queried the retired `todo` tag — the
+#  reading queue now lives in Todoist, reachable via `tdd` / the sb-todo bar.)
+
+declare -A PATHS
+TITLES=()
+
+TMPFILE=$(mktemp)
+eval "$(opam env --switch=forest)"
+cd "$FORESTDIR"
+
+forester query all > "$TMPFILE"
+
+# Worklist = stub-tagged trees, plus anything living under trees/lit-notes/.
+# One record per line, tab-separated as <path>\t<title> (paths never contain tabs).
+while IFS=$'\t' read -r path title; do
+  [[ -z $title ]] && continue
+  TITLES+=("$title")
+  PATHS["$title"]="$path"
+done < <(jq -r '
+  .[]
+  | select(((.tags? // []) | index("stub")) or (.sourcePath | test("/trees/lit-notes/")))
+  | "\(.sourcePath)\t\(.title)"' "$TMPFILE")
+rm "$TMPFILE"
+
+[[ ${#TITLES[@]} -eq 0 ]] && exit 0
+
+SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Promote:")
+[[ -z $SELECTED ]] && exit 1
+
+SOURCEPATH="${PATHS[$SELECTED]}"
+
+alacritty -e bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""

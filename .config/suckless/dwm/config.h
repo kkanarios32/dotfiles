@@ -33,15 +33,18 @@ static const char dmenufont[] = "Iosevka Aile:size=17";
 static const char col_normfg[] = "#D8DEE9";
 static const char col_normbg[] = "#434C5E";
 static const char col_selbo[] = "#88C0D0";
-static const char col_selfg[] = "#88C0D0";  /* active tag: cyan accent, matches status chip icons */
-static const char col_selbg[] = "#2E3440";  /* dark chip background, matches status pills */
-static const char col_titlefg[] = "#E5E9F0"; /* window title: soft off-white, matches chip text */
+static const char col_selfg[] =
+    "#88C0D0"; /* active tag: cyan accent, matches status chip icons */
+static const char col_selbg[] =
+    "#2E3440"; /* dark chip background, matches status pills */
+static const char col_titlefg[] =
+    "#E5E9F0"; /* window title: soft off-white, matches chip text */
 
 static const char *colors[][3] = {
     /*                fg          bg         border   */
-    [SchemeNorm]  = {col_normfg,  col_normbg, col_normbg},
-    [SchemeSel]   = {col_selfg,   col_selbg,  col_selbo},
-    [SchemeTitle] = {col_titlefg, col_selbg,  col_selbo},
+    [SchemeNorm] = {col_normfg, col_normbg, col_normbg},
+    [SchemeSel] = {col_selfg, col_selbg, col_selbo},
+    [SchemeTitle] = {col_titlefg, col_selbg, col_selbo},
 };
 
 /* tagging */
@@ -108,6 +111,7 @@ static const char *voldowncmd[] = {"set-volume", "down", NULL};
 
 static const char *openotecmd[] = {"openote", NULL};
 static const char *mknotecmd[] = {"mknote", NULL};
+static const char *worknotecmd[] = {"worknote", NULL};
 static const char *tddcmd[] = {"tdd", "next", NULL};
 static const char *tdblcmd[] = {"tdd", "backlog", NULL};
 
@@ -136,6 +140,7 @@ static const Key keys[] = {
     {MODKEY | ShiftMask, XK_Return, spawn, {.v = termcmd}},
     {MODKEY, XK_n, spawn, {.v = openotecmd}},
     {MODKEY | ShiftMask, XK_n, spawn, {.v = mknotecmd}},
+    {MODKEY | ShiftMask, XK_w, spawn, {.v = worknotecmd}},
     {MODKEY | ShiftMask, XK_t, spawn, {.v = tddcmd}},
     {MODKEY | ShiftMask, XK_b, spawn, {.v = tdblcmd}},
     {MODKEY, XK_s, spawn, {.v = screenshotcmd}},

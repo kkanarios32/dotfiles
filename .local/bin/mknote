@@ -1,89 +1,37 @@
 #!/bin/bash
+# mknote — create a forest note in the right pipeline stage and open it.
+#
+# Thin wrapper around $FORESTDIR/scripts/new, which is the single source of
+# truth for frontmatter, tagging, and the notes-log.md / inbox.md refresh.
+# The directory IS the pipeline stage:
+#
+#   def / note / thm / prop / blog / ...  -> trees/public/    (permanent note)
+#   lit-notes                             -> trees/lit-notes/ (source-bound; @citekey)
+#   stub                                  -> trees/stubs/     (concept stub / link target)
+#
+# Usage:
+#   mknote <type> <title...> [@citekey]     e.g. mknote lit-notes Store buffer @henn2017
+#   mknote                                   dmenu: pick a type, then type a title
+#                                            (append @citekey when making a lit-note)
 
-_create_fleet() {
-  local title="$1"
-  local dir="${FORESTDIR}/trees/fleet"
-  mkdir -p "${dir}"
-
-  local index="${dir}/fleet.tree"
-  if [ ! -e "${index}" ]; then
-    cat > "${index}" <<INDEXEOF
-\\import{base-macros}
-\\title{Fleeting notes}
-\\author{kellenkanarios}
-
-INDEXEOF
-  fi
-
-  local filepath
-  filepath=$(opam exec -- forester new --random --dest="${dir}")
-  local id datetag
-  id=$(basename "${filepath}" .tree)
-  datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-  cat > "${filepath}" <<FLEETEOF
-\\import{base-macros}
-\\author{kellenkanarios}
-\\meta{author}{false}
-\\tag{private}
-\\title{${title}}
-\\date{${datetag}}
-
-FLEETEOF
-
-  echo "\\transclude{${id}}" >> "${index}"
-  echo "${filepath}"
-}
-
-_create_todo() {
-  local title="$1"
-  local filepath
-  filepath=$(opam exec -- forester new --random --dest="${FORESTDIR}/trees/todo")
-  echo "\\title{${title}}" >> "${filepath}"
-  cat "${FORESTDIR}/templates/todo.tree" >> "${filepath}"
-  echo "${filepath}"
-}
-
-_create_public() {
-  local title="$1"
-  local dir="${FORESTDIR}/trees/public"
-  mkdir -p "${dir}"
-  local filepath
-  filepath=$(opam exec -- forester new --random --dest="${dir}")
-  local datetag
-  datetag=$(date +"%Y-%m-%d")
-
-  cat > "${filepath}" <<PUBEOF
-\\tag{public}
-\\date{${datetag}}
-\\title{${title}}
-\\author{kellenkanarios}
-\\import{base-macros}
-
-PUBEOF
-
-  echo "${filepath}"
-}
+# Types offered in the dmenu picker.
+TYPES=$'def\nnote\nlit-notes\nstub\nblog'
 
 _run() {
-  local type="$1"
-  shift
+  local type="$1"; shift
   local title="$*"
 
   cd "$FORESTDIR" || exit 1
   eval "$(opam env --switch=forest)"
 
-  local filepath
-  case "$type" in
-    fleet)  filepath=$(_create_fleet "$title") ;;
-    todo)   filepath=$(_create_todo "$title") ;;
-    public) filepath=$(_create_public "$title") ;;
-    *) echo "unknown note type: $type" >&2; exit 1 ;;
-  esac
+  # Delegate to scripts/new. It prints the new file path on the first line,
+  # then the registry/inbox refresh messages — capture all of it so those
+  # steps run to completion, then peel off the path.
+  local out filepath
+  out=$("$FORESTDIR/scripts/new" "$type" $title) || { echo "$out" >&2; exit 1; }
+  filepath=$(printf '%s\n' "$out" | head -n1)
 
-  if [ "$type" != "todo" ]; then
-    nvim + "$filepath"
-  fi
+  [ -n "$filepath" ] && [ -e "$filepath" ] && nvim + "$filepath"
 }
 
 if [[ $# -ge 2 ]]; then
@@ -91,15 +39,10 @@ if [[ $# -ge 2 ]]; then
   exit
 fi
 
-TYPE=$(printf '%s\n' fleet todo public | dmenu -i -l 3 -p "Type:")
+TYPE=$(printf '%s\n' "$TYPES" | dmenu -i -l 5 -p "Type:")
 [[ -z "$TYPE" ]] && exit 0
 TITLE=$(dmenu -i -l 20 -p "Title:" < /dev/null)
 [[ -z "$TITLE" ]] && exit 0
 
-cmd="$(declare -f _create_fleet _create_todo _create_public _run); _run \"$TYPE\" \"$TITLE\""
-
-if [ "$TYPE" = "todo" ]; then
-  bash -c "$cmd"
-else
-  alacritty -e bash -l -c "$cmd"
-fi
+cmd="$(declare -f _run); _run \"$TYPE\" \"$TITLE\""
+alacritty -e bash -l -c "$cmd"
