@@ -12,6 +12,11 @@ _log() {
   datetag=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   if [ ! -e "${file}" ]; then
+      # Quote of the day: a short unread passage from Marcus Aurelius'
+      # Meditations, rendered as a Forester \iblock and marked read so it
+      # won't recur. Empty (silently omitted) if the corpus is exhausted.
+      quote="$(python3 "${FORESTDIR}/data/quote_of_the_day.py" 2>/dev/null)"
+
       # First call of the day: seed the note with today's todos — the same
       # "Next" filter sb-todo shows (`tdd next`) — pulled fresh from Todoist
       # and rendered as a nested outline: one bold project per top-level item,
@@ -40,6 +45,8 @@ _log() {
 \\tag{private}
 \\title{$(now)}
 \\date{${datetag}}
+
+${quote}
 
 \\section{Todos}{
 ${todos}
