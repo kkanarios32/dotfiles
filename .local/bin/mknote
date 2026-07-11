@@ -5,17 +5,17 @@
 # truth for frontmatter, tagging, and the notes-log.md / inbox.md refresh.
 # The directory IS the pipeline stage:
 #
-#   def / note / thm / prop / blog / ...  -> trees/public/    (permanent note)
-#   lit-notes                             -> trees/lit-notes/ (source-bound; @citekey)
+#   def / note / thm / prop / blog / ...  -> trees/evergreen/ (evergreen note)
+#   transient                             -> trees/inbox/     (transient; @citekey)
 #   stub                                  -> trees/stubs/     (concept stub / link target)
 #
 # Usage:
-#   mknote <type> <title...> [@citekey]     e.g. mknote lit-notes Store buffer @henn2017
+#   mknote <type> <title...> [@citekey]     e.g. mknote transient Store buffer @henn2017
 #   mknote                                   dmenu: pick a type, then type a title
-#                                            (append @citekey when making a lit-note)
+#                                            (append @citekey when making a transient note)
 
 # Types offered in the dmenu picker.
-TYPES=$'def\nnote\nlit-notes\nstub\nblog'
+TYPES=$'def\nnote\ntransient\nstub\nblog'
 
 _run() {
   local type="$1"; shift

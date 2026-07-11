@@ -2,8 +2,8 @@
 # worknote — pick a work-in-progress note to promote and open it.
 #
 # The forest inbox (see scripts/inbox / inbox.md) is everything still in the
-# pipeline: concept stubs awaiting a body and literature notes awaiting
-# promotion to a permanent note. This lists exactly those in dmenu and opens
+# pipeline: concept stubs awaiting a body and transient notes awaiting
+# promotion to an evergreen note. This lists exactly those in dmenu and opens
 # the chosen one in nvim.
 #
 # (Replaces the old `todnote`, which queried the retired `todo` tag — the
@@ -18,7 +18,7 @@ cd "$FORESTDIR"
 
 forester query all > "$TMPFILE"
 
-# Worklist = stub-tagged trees, plus anything living under trees/lit-notes/.
+# Worklist = stub-tagged trees, plus transient-tagged notes awaiting promotion.
 # One record per line, tab-separated as <path>\t<title> (paths never contain tabs).
 while IFS=$'\t' read -r path title; do
   [[ -z $title ]] && continue
@@ -26,7 +26,7 @@ while IFS=$'\t' read -r path title; do
   PATHS["$title"]="$path"
 done < <(jq -r '
   .[]
-  | select(((.tags? // []) | index("stub")) or (.sourcePath | test("/trees/lit-notes/")))
+  | select(((.tags? // []) | index("stub")) or ((.tags? // []) | index("transient")))
   | "\(.sourcePath)\t\(.title)"' "$TMPFILE")
 rm "$TMPFILE"
 
