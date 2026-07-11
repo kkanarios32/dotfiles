@@ -14,20 +14,22 @@ _log() {
   if [ ! -e "${file}" ]; then
       # First call of the day: seed the note with today's todos — the same
       # "Next" filter sb-todo shows (`tdd next`) — pulled fresh from Todoist
-      # and grouped by top-level project as a Forester list.
+      # and rendered as a nested outline: one bold project per top-level item,
+      # its tasks nested beneath.
       todoist sync >/dev/null 2>&1 || true
       todos="$(tdd next list 2>/dev/null | awk -F'\t' '
         function esc(s){ gsub(/\\/,"/",s); gsub(/\{/,"(",s); gsub(/\}/,")",s); return s }
+        NR==1 { print "\\ul{" }
         { root=esc($1); content=esc($2)
           if (root != cur) {
-            if (cur != "") print "}"
-            print "\\strong{" root "}"
-            print "\\ul{"
+            if (cur != "") { print "    }"; print "  }" }
+            print "  \\li{\\strong{" root "}"
+            print "    \\ul{"
             cur=root
           }
-          print "  \\li{" content "}"
+          print "      \\li{" content "}"
         }
-        END { if (cur != "") print "}" }
+        END { if (NR>0) { print "    }"; print "  }"; print "}" } }
       ')"
       [ -z "$todos" ] && todos='\p{Nothing queued for today. 🎉}'
 
@@ -39,7 +41,7 @@ _log() {
 \\title{$(now)}
 \\date{${datetag}}
 
-\\section{Today's todos}{
+\\section{Todos}{
 ${todos}
 }
 DAILYEOF
@@ -47,9 +49,9 @@ DAILYEOF
       echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
   fi
 
-  # Every call stamps a fresh timestamped, horizontally-ruled divider so each
-  # sitting is delimited in the day's log.
-  printf '\n\\em{%s}\n\\hr\n' "${datetag}" >> "${file}"
+  # Every call opens a fresh entry: the local time in bold, underlined by an
+  # \hr, delimiting each sitting in the day's log.
+  printf '\n\\p{\\strong{%s}}\n\\hr\n\n' "$(date +'%-I:%M %p')" >> "${file}"
 
   nvim + "${file}"
 
