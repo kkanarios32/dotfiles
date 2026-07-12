@@ -7,7 +7,7 @@
 #
 #   def / note / thm / prop / blog / ...  -> trees/evergreen/ (evergreen note)
 #   transient                             -> trees/inbox/     (transient; @citekey)
-#   stub                                  -> trees/stubs/     (concept stub / link target)
+#   stub                                  -> trees/evergreen/ (concept stub / link target; \tag{stub})
 #
 # Usage:
 #   mknote <type> <title...> [@citekey]     e.g. mknote transient Store buffer @henn2017
