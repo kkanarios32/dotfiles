@@ -56,11 +56,22 @@ DAILYEOF
       echo "\\transclude{${filename}}" >> "${dir}/daily.tree"
   fi
 
-  # Every call opens a fresh entry: the local time in bold, underlined by an
-  # \hr, delimiting each sitting in the day's log.
-  printf '\n\\p{\\strong{%s}}\n\\hr\n\n' "$(date +'%-I:%M %p')" >> "${file}"
+  # Every call opens a fresh sitting as its own atomic note, transcluded into
+  # the day's log under a bold local-time header + \hr divider. You write in
+  # the new note; the daily tree is just the aggregator.
+  entry=$(forester new --random --dest="${dir}")
+  entryid=$(basename "${entry}" .tree)
+  {
+    echo '\import{base-macros}'
+    echo '\author{kellenkanarios}'
+    echo '\meta{author}{false}'
+    echo '\tag{private}'
+  } >> "${entry}"
 
-  nvim + "${file}"
+  printf '\n\\p{\\strong{%s}}\n\\hr\n\\transclude{%s}\n' \
+    "$(date +'%-I:%M %p')" "${entryid}" >> "${file}"
+
+  nvim + "${entry}"
 
   read -p 'Do you want to commit? ' commit
 
@@ -69,7 +80,7 @@ DAILYEOF
   fi
 
   cd "${dir}" || exit 1
-  git add "${file}"
+  git add "${file}" "${entry}" daily.tree
   git commit
   git push
 }
