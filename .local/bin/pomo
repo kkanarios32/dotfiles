@@ -161,6 +161,11 @@ function pomo_msg {
     # work or break block.  This requires a Pomodoro session to
     # have already been started...
     [[ -e "$POMO" ]] || return 1
+    # Re-read the work time each pass: the notify daemon is long-lived, but the
+    # duration is chosen fresh per session via `pomo start` (dmenu -> .worktime).
+    # Without this the daemon fires at its start-up boundary, not the current one.
+    [[ -e "${POMO}.worktime" ]] && WORK_TIME=$(cat "${POMO}.worktime")
+    BREAK_TIME=$(( WORK_TIME / 50 * 5 + 5 ))
     pomo_update
     running=$(pomo_stat)
     while true; do
