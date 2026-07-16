@@ -176,6 +176,12 @@ function pomo_msg {
             work=false
         fi
         sleep $left
+        # The timer may have been stopped (or paused) while we slept. The entry
+        # guard above only runs once, so without this a deleted POMO file makes
+        # pomo_stat read 0 -- which the break->work heuristic below mistakes for
+        # a real transition and fires a spurious alert. Bail and let pomo_notify
+        # re-enter cleanly on its next pass.
+        { pomo_isstopped || pomo_ispaused; } && return 1
         # pomo_stat is time from the start of the work+block cycle.
         # 1. If switching from work->break then stat >= running + left.
         # 2. If switching from break->work then either
