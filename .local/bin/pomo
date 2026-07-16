@@ -59,6 +59,7 @@ function pomo_start {
     pomo_prompt_time || return 1
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
+    pomo_signal_notify
 }
 
 function pomo_isstopped {
@@ -71,6 +72,7 @@ function pomo_isstopped {
 function pomo_stop {
     # Stop pomo cycles.
     rm -f "$POMO" "${POMO}.worktime"
+    pomo_signal_notify  # daemon recomputes, sees no session, stops alerting
     # Refresh the dwmblocks pomo block (signal 8 in dwmblocks config.h) so the
     # pill disappears immediately instead of on its next interval tick.
     pkill -RTMIN+8 dwmblocks 2>/dev/null
@@ -102,6 +104,7 @@ function pomo_pause {
         # Pause a pomo block.
         echo "$running" > "$POMO"
     fi
+    pomo_signal_notify
 }
 
 function pomo_update {
@@ -156,63 +159,71 @@ function pomo_status {
     done
 }
 
-function pomo_msg {
-    # Send a message using the GUI or console at the end of the next
-    # work or break block.  This requires a Pomodoro session to
-    # have already been started...
-    [[ -e "$POMO" ]] || return 1
-    # Re-read the work time each pass: the notify daemon is long-lived, but the
-    # duration is chosen fresh per session via `pomo start` (dmenu -> .worktime).
-    # Without this the daemon fires at its start-up boundary, not the current one.
+function pomo_next_event {
+    # Echo "<seconds-until-next-boundary> <callback-arg>" for the current
+    # session, or return 1 when there is nothing to wait for (stopped/paused).
+    # callback-arg is 0 for the end of a work block, 1 for the end of a break.
+    pomo_isstopped && return 1
+    pomo_ispaused && return 1
+    # The work duration is chosen per session via `pomo start`; pick it up here.
     [[ -e "${POMO}.worktime" ]] && WORK_TIME=$(cat "${POMO}.worktime")
     BREAK_TIME=$(( WORK_TIME / 50 * 5 + 5 ))
-    pomo_update
+    pomo_update  # wrap an overrun cycle back into [0, work+break)
     running=$(pomo_stat)
-    while true; do
-        left=$(( WORK_TIME*60 - running ))
-        work=true
-        if [[ $left -lt 0 ]]; then
-            left=$(( left + BREAK_TIME*60 ))
-            work=false
-        fi
-        sleep $left
-        # The timer may have been stopped (or paused) while we slept. The entry
-        # guard above only runs once, so without this a deleted POMO file makes
-        # pomo_stat read 0 -- which the break->work heuristic below mistakes for
-        # a real transition and fires a spurious alert. Bail and let pomo_notify
-        # re-enter cleanly on its next pass.
-        { pomo_isstopped || pomo_ispaused; } && return 1
-        # pomo_stat is time from the start of the work+block cycle.
-        # 1. If switching from work->break then stat >= running + left.
-        # 2. If switching from break->work then either
-        #    stat >= running + left (haven't updated timestamp) or
-        #    stat < running (have just updated the timestamp from a
-        #    separate pomo call, e.g. using pomo status).
-        stat=$(pomo_stat)
-        [[ $stat -ge $(( running + left )) ]] && break
-        $work || { [[ $stat -lt $running ]] && break; }
-        running=$stat
-    done
-    if [[ $(( stat - running - left )) -le 1 ]]; then
-        if $work; then
-            $MSG_CALLBACK 0  # end of work block
-        else
-            $MSG_CALLBACK 1  # end of break block
-        fi
+    if [[ $running -lt $(( WORK_TIME*60 )) ]]; then
+        echo "$(( WORK_TIME*60 - running )) 0"
+    else
+        echo "$(( (WORK_TIME+BREAK_TIME)*60 - running )) 1"
+    fi
+}
+
+function pomo_wait {
+    # Sleep for $1 seconds, but return non-zero early if SIGUSR1 arrives.
+    # `pomo start/stop/pause` send it (via pomo_signal_notify) so the daemon
+    # recomputes immediately instead of finishing a now-stale sleep. Backgrounding
+    # the sleep and `wait`-ing on it is what lets the trap interrupt us -- a bare
+    # `sleep` would run to completion before the handler fired.
+    sleep "$1" &
+    local spid=$!
+    wait "$spid"
+    if [[ $? -gt 128 ]]; then
+        kill "$spid" 2>/dev/null
+        wait "$spid" 2>/dev/null
+        return 1
     fi
     return 0
 }
 
 function pomo_notify {
+    # Raise a notification at each work/break boundary. Instead of polling, the
+    # daemon sleeps until the next boundary and is woken by SIGUSR1 whenever the
+    # session changes (start/stop/pause), so it never fires on a stale schedule.
+    # SIGUSR1 needs a trap or its default disposition would kill the daemon.
+    echo $$ > "$POMO_PIDFILE"
+    trap ':' USR1
+    trap 'rm -f "$POMO_PIDFILE"; exit 0' TERM INT HUP
     while true; do
-        if pomo_msg; then
-            # sleep for a second so that the timestamp of POMO is not the
-            # current time (i.e. allow next unit to start).
-            sleep 1
+        if event=$(pomo_next_event); then
+            if pomo_wait "${event% *}"; then
+                # Boundary reached naturally. Re-verify the session is still live
+                # (a stop could have raced the wakeup) before notifying.
+                if ! pomo_isstopped && ! pomo_ispaused; then
+                    $MSG_CALLBACK "${event#* }"
+                    sleep 1  # age the timestamp so the next unit starts cleanly
+                fi
+            fi
         else
-            sleep 60
+            # Idle (stopped/paused): block until a start pokes us, with a 60s
+            # safety-net poll in case a signal is ever missed.
+            pomo_wait 60
         fi
     done
+}
+
+function pomo_signal_notify {
+    # Poke the running notify daemon (if any) so it recomputes immediately.
+    [[ -e "$POMO_PIDFILE" ]] || return 0
+    kill -USR1 "$(cat "$POMO_PIDFILE")" 2>/dev/null || true
 }
 
 
@@ -332,6 +343,7 @@ done
 
 [[ -e ${config} ]] && source "${config}"
 POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
+POMO_PIDFILE="${POMO}.notifypid" # notify daemon records its PID here so start/stop/pause can signal it
 WORK_TIME=${POMO_WORK_TIME:-50}
 [[ -e "${POMO}.worktime" ]] && WORK_TIME=$(cat "${POMO}.worktime")
 BREAK_TIME=$(( WORK_TIME / 50 * 5 + 5 ))
