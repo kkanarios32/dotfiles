@@ -18,10 +18,17 @@ export PATH
 
 [ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources"
 
-# Apply the autorandr profile matching the currently-connected monitors
-# (falls back to 'ultrawide' if none matches). Run before feh/dwm so the
-# wallpaper and bar come up at the correct resolution.
-autorandr --change --default ultrawide
+# Apply the autorandr profile matching the currently-connected monitors.
+# Run before set-wallpaper/dwm so the wallpaper and bar come up at the
+# correct resolution. On the desktop, fall back to the 'ultrawide' profile
+# when nothing matches; on the laptop there is no desktop-only fallback to
+# force, so just apply a matching profile if one exists (the internal panel
+# is already lit by X at its preferred mode) and never fail the session.
+if [[ "$(hostname)" == "kellen-laptop" ]]; then
+  autorandr --change || true
+else
+  autorandr --change --default ultrawide || true
+fi
 
 # Wallpaper is chosen from the active autorandr profile (see ~/.local/bin/set-wallpaper).
 set-wallpaper &

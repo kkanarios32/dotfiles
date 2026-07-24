@@ -2,10 +2,13 @@
 """tdl — log today's completed todoist tasks into the forester daily tree.
 
 Pulls today's completed tasks from Todoist (`todoist completed-list`), groups
-them by top-level project, and writes a `\\section{Completed}{...}` block into
-today's daily tree at $FORESTDIR/trees/daily/YYYY-MM-DD.tree. Re-running it
-refreshes that section in place (idempotent), so it's safe to call repeatedly
-(e.g. at the end of the day, or after each `tdd next`).
+them by top-level project, and writes a `\\section{Reflection}{...}` block into
+today's daily tree at $FORESTDIR/trees/daily/YYYY-MM-DD.tree. The section holds
+the grouped task list followed by the reflection prompts ("What went well
+today?" / "What went bad today?") to fill in by hand. Re-running it refreshes
+the task list in place (idempotent) while preserving any reflection prose
+already written, so it's safe to call repeatedly (e.g. at the end of the day,
+or after each `tdd next`).
 """
 
 import csv
@@ -21,7 +24,11 @@ FOREST_DIR = Path(os.environ.get("FORESTDIR", os.path.expanduser("~/Projects/for
 TODAY = date.today()
 FILE = FOREST_DIR / "trees" / "daily" / f"{TODAY.isoformat()}.tree"
 CACHE_FILE = Path(os.path.expanduser("~/.cache/todoist/cache.json"))
-SECTION = r"\section{Completed}{"
+SECTION = r"\section{Reflection}{"
+PROMPTS = "\n".join([
+    r"\p{\strong{What went well today?} }",
+    r"\p{\strong{What went bad today?} }",
+])
 
 
 def completed_today():
@@ -67,34 +74,59 @@ def group_completed(tasks):
     return sorted(groups.items())
 
 
-def render_section(groups):
-    lines = [SECTION]
+def render_task_list(groups):
+    """The grouped completed-task \\ul{...} block for the Reflection section."""
+    lines = ["\\ul{"]
     for root, ts in groups:
-        lines.append(f"\\p{{\\strong{{{root}}}}}")
-        lines.append("\\ul{")
+        lines.append(f"  \\li{{\\strong{{{root}}}}}")
+        lines.append("  \\ul{")
         for t in ts:
-            lines.append(f"  \\tdtaskx{{}}{{{t['content']}}}")
-        lines.append("}")
+            lines.append(f"    \\tdtaskx{{}}{{{t['content']}}}")
+        lines.append("  }")
     lines.append("}")
     return "\n".join(lines)
 
 
-def find_section_bounds(text):
-    """(start, end) covering an existing \\section{Completed}{...}, or None."""
-    start = text.find(SECTION)
-    if start == -1:
-        return None
-    i = start + len(SECTION)
-    depth = 1
-    while i < len(text) and depth > 0:
+def render_section(groups, prose=None):
+    """Full \\section{Reflection}{...}: task list, then the reflection prose.
+
+    `prose` is the reflection prompts/answers to keep after the task list;
+    defaults to the empty prompt template on first creation.
+    """
+    if prose is None:
+        prose = PROMPTS
+    return f"{SECTION}\n{render_task_list(groups)}\n{prose}\n}}"
+
+
+def match_brace(text, open_idx):
+    """Given the index of an opening '{', return the index just past its match."""
+    depth = 0
+    for i in range(open_idx, len(text)):
         if text[i] == "{":
             depth += 1
         elif text[i] == "}":
             depth -= 1
             if depth == 0:
-                return start, i + 1
-        i += 1
-    return start, len(text)
+                return i + 1
+    return len(text)
+
+
+def find_section_bounds(text):
+    """(start, end) covering an existing \\section{Reflection}{...}, or None."""
+    start = text.find(SECTION)
+    if start == -1:
+        return None
+    return start, match_brace(text, start + len(SECTION) - 1)
+
+
+def extract_prose(text, bounds):
+    """Reflection prose (prompts/answers) after the task \\ul in an existing section."""
+    inner = text[bounds[0] + len(SECTION):bounds[1] - 1]
+    ul = inner.find(r"\ul{")
+    if ul == -1:
+        return None
+    prose = inner[match_brace(inner, ul + len(r"\ul")):].strip()
+    return prose or None
 
 
 def main():
@@ -109,10 +141,11 @@ def main():
         return
 
     groups = group_completed(tasks)
-    section = render_section(groups)
 
     text = FILE.read_text(encoding="utf-8")
     bounds = find_section_bounds(text)
+    prose = extract_prose(text, bounds) if bounds else None
+    section = render_section(groups, prose)
     if bounds:
         new_text = text[:bounds[0]] + section + text[bounds[1]:]
     else:

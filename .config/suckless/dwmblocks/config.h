@@ -22,7 +22,7 @@
 #define BLOCKS(X)               \
     X("", "sb-pomo", 1, 8)      \
     X("", "sb-todo", 60, 7)     \
-    X("", "sb-habits", 900, 9)  \
+    X("", "sb-habits", 300, 9)  \
     X("", "sb-time", 60, 6)     \
     X("", "sb-date", 10000, 5)  \
     X("", "sb-battery", 1, 3)
