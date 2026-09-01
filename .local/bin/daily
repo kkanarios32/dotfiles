@@ -77,7 +77,7 @@ DAILYEOF
 
 if ! tty >/dev/null 2>&1; then
   command="$(declare -f _log; echo "_log")"
-  alacritty -e bash -l -c "$command"
+  kitty bash -l -c "$command"
 else
   _log
 fi

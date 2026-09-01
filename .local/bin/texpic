@@ -11,10 +11,9 @@ TARGET = "image/png"
 def open_editor(filename):
     subprocess.run(
         [
-            "alacritty",
+            "kitty",
             "--class",
             "Show",
-            "-e",
             "nvim",
             "+2",
             f"{filename}",

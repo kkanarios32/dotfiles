@@ -26,7 +26,7 @@ kind=$(printf "Subtask\nTask" | dmenu $(dmenuopt) -l 2 -p "What do you want to a
 [ -z "$kind" ] && exit 1
 
 TMPFILE=$(mktemp)
-alacritty --class Show -e nvim +2 "${TMPFILE}"
+kitty --class Show nvim +2 "${TMPFILE}"
 item_name=$(cat ${TMPFILE})
 
 [ -z "$item_name" ] && exit 1

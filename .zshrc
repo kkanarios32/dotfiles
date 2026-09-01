@@ -7,7 +7,7 @@ alias ast="arbtt-stats  --filter='\$date>='`date +"%Y-%m-%d"`"
 alias g='sr google -browser=w3m'
 
 precmd() {
-  print -Pn "\e]0;Alacritty: %~\a"
+  print -Pn "\e]0;kitty: %~\a"
 }
 
 export CARGO_HOME=/opt/cargo

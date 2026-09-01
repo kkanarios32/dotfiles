@@ -37,4 +37,4 @@ SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Promote:")
 
 SOURCEPATH="${PATHS[$SELECTED]}"
 
-alacritty -e bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""
+kitty bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""

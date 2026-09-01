@@ -45,4 +45,4 @@ TITLE=$(dmenu -i -l 20 -p "Title:" < /dev/null)
 [[ -z "$TITLE" ]] && exit 0
 
 cmd="$(declare -f _run); _run \"$TYPE\" \"$TITLE\""
-alacritty -e bash -l -c "$cmd"
+kitty bash -l -c "$cmd"

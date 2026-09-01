@@ -97,7 +97,7 @@ static char dmenumon[2] =
     "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = {"dmenu_run", "-l",     "5",   "-h",      "25",
                                  "-m",        dmenumon, "-fn", dmenufont, NULL};
-static const char *termcmd[] = {"alacritty", NULL};
+static const char *termcmd[] = {"kitty", NULL};
 static const char *passcmd[] = {"passmenu", "-l",  "5",       "-h",
                                 "25",       "-fn", dmenufont, NULL};
 static const char *screenshotcmd[] = {"xscreenshot", "-m", "selection",

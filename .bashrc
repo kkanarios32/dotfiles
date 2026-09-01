@@ -344,3 +344,6 @@ if [ -f '/home/kellen/Downloads/google-cloud-sdk/path.bash.inc' ]; then . '/home
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/kellen/Downloads/google-cloud-sdk/completion.bash.inc' ]; then . '/home/kellen/Downloads/google-cloud-sdk/completion.bash.inc'; fi
+
+# For SkyPilot shell completion
+. ~/.sky/.sky-complete.bash

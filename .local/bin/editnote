@@ -20,5 +20,5 @@ SELECTED=$(printf '%s\n' "${TITLES[@]}" | dmenu -i -l 20 -p "Edit Note:")
 
 SOURCEPATH="${PATHS[$SELECTED]}"
 
-# Launch Alacritty with nvim on selected file
-alacritty -e bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""
+# Launch kitty with nvim on selected file
+kitty bash -c "eval \"\$(opam env --switch=forest)\"; nvim \"$SOURCEPATH\""

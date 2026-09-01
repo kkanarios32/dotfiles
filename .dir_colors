@@ -4,6 +4,7 @@
 COLOR tty
 
 TERM alacritty
+TERM xterm-kitty
 TERM tmux*
 TERM tmux-256color
 

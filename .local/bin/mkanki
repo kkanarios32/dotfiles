@@ -41,7 +41,7 @@ rm "$TMP_FILE"
 
 if ! tty >/dev/null 2>&1; then
   command="$(declare -f _deckfile; echo "_deckfile")"
-  alacritty -e bash -l -c "$command"
+  kitty bash -l -c "$command"
 else
   _deckfile
 fi
